@@ -1,10 +1,9 @@
-version: '3.8'
 services:
   postgres:
     image: postgres:15
     container_name: school-postgres
     environment:
-      POSTGRES_DB: school_management
+      POSTGRES_DB: taali_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:

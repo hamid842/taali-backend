@@ -1,20 +1,16 @@
 package com.taali.resource
 
-import com.taali.dto.*
-import com.taali.entity.User
-import com.taali.entity.RefreshToken
-import com.taali.service.*
+import com.taali.dto.otp.OtpVerificationRequest
+import com.taali.dto.otp.ResendOtpRequest
+import com.taali.dto.register.RegisterRequest
+import com.taali.service.AuthService
+import jakarta.inject.Inject
+import jakarta.validation.Valid
+import jakarta.ws.rs.*
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 import org.eclipse.microprofile.openapi.annotations.Operation
 import org.eclipse.microprofile.openapi.annotations.tags.Tag
-import java.time.LocalDateTime
-import javax.inject.Inject
-import javax.transaction.Transactional
-import javax.validation.Valid
-import javax.ws.rs.*
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.HttpHeaders
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Path("/auth")
 @Produces(MediaType.APPLICATION_JSON)
@@ -22,146 +18,48 @@ import javax.ws.rs.core.Response
 @Tag(name = "Authentication", description = "User authentication and registration")
 class AuthResource {
 
-    @Inject
-    lateinit var jwtService: JwtService
+        @Inject lateinit var authService: AuthService
 
-    @Inject
-    lateinit var passwordService: PasswordService
+        @POST
+        @Path("/register")
+        @Operation(summary = "Register a new user with OTP verification")
+        fun register(@Valid request: RegisterRequest): Response {
+                val result = authService.register(request)
 
-    @Inject
-    lateinit var authService: AuthService
-
-    @Inject
-    lateinit var localizationService: LocalizationService
-
-    @Context
-    lateinit var httpHeaders: HttpHeaders
-
-    // Valid roles for registration
-    private val validRoles = listOf("STUDENT", "TEACHER", "ADMIN", "PARENT")
-
-    @POST
-    @Path("/register")
-    @Transactional
-    @Operation(summary = "Register a new user")
-    fun register(@Valid request: RegisterRequest): Response {
-        return try {
-            // Validate role
-            if (!validRoles.contains(request.role.uppercase())) {
-                val rolesString = validRoles.joinToString(", ")
-                val message = localizationService.getMessage("auth.register.invalid_role", rolesString)
-                return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(ApiResponse.error(message))
-                    .build()
-            }
-
-            // Check if user already exists
-            if (User.existsByEmail(request.email)) {
-                val message = localizationService.getMessage("auth.register.email_exists")
-                return Response.status(Response.Status.CONFLICT)
-                    .entity(ApiResponse.error(message))
-                    .build()
-            }
-
-            // Create new user
-            val user = User().apply {
-                email = request.email.lowercase().trim()
-                password = passwordService.hashPassword(request.password)
-                firstName = request.firstName
-                lastName = request.lastName
-                phone = request.phone
-                role = request.role.uppercase()
-                createdAt = LocalDateTime.now()
-                updatedAt = LocalDateTime.now()
-                isActive = true
-                emailVerified = false
-            }
-
-            user.persist()
-
-            // Generate tokens
-            val accessToken = jwtService.generateToken(user)
-            val refreshToken = authService.createRefreshToken(user)
-
-            val authResponse = AuthResponse(
-                accessToken = accessToken,
-                refreshToken = refreshToken.token,
-                email = user.email,
-                firstName = user.firstName,
-                lastName = user.lastName,
-                phone = user.phone,
-                role = user.role,
-                message = localizationService.getMessage("auth.register.success")
-            )
-
-            Response.status(Response.Status.CREATED)
-                .entity(ApiResponse.success(localizationService.getMessage("auth.register.success"), authResponse))
-                .build()
-
-        } catch (e: Exception) {
-            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(ApiResponse.error(localizationService.getMessage("auth.register.error") + ": " + e.message))
-                .build()
+                return if (result.success) {
+                        if (result.requiresVerification) {
+                                Response.status(Response.Status.OK).entity(result).build()
+                        } else {
+                                Response.status(Response.Status.CREATED).entity(result).build()
+                        }
+                } else {
+                        Response.status(Response.Status.BAD_REQUEST).entity(result).build()
+                }
         }
-    }
 
-    @POST
-    @Path("/login")
-    @Operation(summary = "Login user")
-    fun login(@Valid request: AuthRequest): Response {
-        return try {
-            // Find user by email
-            val user = User.findByEmail(request.email.lowercase().trim())
-            if (user == null) {
-                val message = localizationService.getMessage("auth.login.invalid_credentials")
-                return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(ApiResponse.error(message))
-                    .build()
-            }
+        @POST
+        @Path("/verify-otp")
+        @Operation(summary = "Verify OTP code for registration")
+        fun verifyOtp(@Valid request: OtpVerificationRequest): Response {
+                val result = authService.verifyOtp(request)
 
-            // Check if user is active
-            if (!user.isActive) {
-                val message = localizationService.getMessage("auth.login.account_inactive")
-                return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(ApiResponse.error(message))
-                    .build()
-            }
-
-            // Verify password
-            if (!passwordService.checkPassword(request.password, user.password)) {
-                val message = localizationService.getMessage("auth.login.invalid_credentials")
-                return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(ApiResponse.error(message))
-                    .build()
-            }
-
-            // Update last login
-            user.lastLogin = LocalDateTime.now()
-            user.persist()
-
-            // Generate tokens
-            val accessToken = jwtService.generateToken(user)
-            val refreshToken = authService.createRefreshToken(user)
-
-            val authResponse = AuthResponse(
-                accessToken = accessToken,
-                refreshToken = refreshToken.token,
-                email = user.email,
-                firstName = user.firstName,
-                lastName = user.lastName,
-                phone = user.phone,
-                role = user.role,
-                message = localizationizationService.getMessage("auth.login.success")
-            )
-
-            Response.ok(ApiResponse.success(localizationService.getMessage("auth.login.success"), authResponse)).build()
-
-        } catch (e: Exception) {
-            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(ApiResponse.error(localizationService.getMessage("auth.login.error") + ": " + e.message))
-                .build()
+                return if (result.success) {
+                        Response.status(Response.Status.OK).entity(result).build()
+                } else {
+                        Response.status(Response.Status.BAD_REQUEST).entity(result).build()
+                }
         }
-    }
 
-    // Add other endpoints (refresh, logout) as needed...
+        @POST
+        @Path("/resend-otp")
+        @Operation(summary = "Resend OTP code")
+        fun resendOtp(@Valid request: ResendOtpRequest): Response {
+                val result = authService.resendOtp(request)
+
+                return if (result.success) {
+                        Response.status(Response.Status.OK).entity(result).build()
+                } else {
+                        Response.status(Response.Status.BAD_REQUEST).entity(result).build()
+                }
+        }
 }

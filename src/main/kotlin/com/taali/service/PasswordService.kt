@@ -1,19 +1,23 @@
 package com.taali.service
 
-import org.mindrot.jbcrypt.BCrypt
-import javax.enterprise.context.ApplicationScoped
+import at.favre.lib.crypto.bcrypt.BCrypt
+import jakarta.enterprise.context.ApplicationScoped
+import org.slf4j.LoggerFactory
 
 @ApplicationScoped
 class PasswordService {
 
-    fun hashPassword(plainPassword: String): String {
-        return BCrypt.hashpw(plainPassword, BCrypt.gensalt(12))
+    private val logger = LoggerFactory.getLogger(PasswordService::class.java)
+
+    fun hashPassword(password: String): String {
+        return BCrypt.withDefaults().hashToString(12, password.toCharArray())
     }
 
-    fun checkPassword(plainPassword: String, hashedPassword: String): Boolean {
+    fun verifyPassword(password: String, hash: String): Boolean {
         return try {
-            BCrypt.checkpw(plainPassword, hashedPassword)
+            BCrypt.verifyer().verify(password.toCharArray(), hash.toCharArray()).verified
         } catch (e: Exception) {
+            logger.error("Password verification failed", e)
             false
         }
     }
