@@ -1,13 +1,26 @@
--- Insert default admin user (password: admin123)
-INSERT INTO users (email, password_hash, first_name, last_name, phone_number, role, status, email_verified, created_at, updated_at)
-VALUES (
+-- First, generate a proper hash for "admin123" using your PasswordEncoder
+-- Then run this:
+
+INSERT INTO users (
+    user_id,
+    email,
+    password_hash,
+    first_name,
+    last_name,
+    phone_number,
+    role,
+    status,
+    created_at,
+    updated_at
+) VALUES (
+    uuid_generate_v4(),
     'admin@taali.com',
     '$2a$12$LQv3c1yqBWVHxkd0L6kZrOaGFrnsyknKZyFbYh6g.2Iuwm55qRNWS',
     'System',
     'Admin',
     '+989120658719',
     'ADMIN',
-    'ACTIVE', -- Add status value
+    'ACTIVE',
     true,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP

@@ -8,10 +8,14 @@ import jakarta.ws.rs.core.HttpHeaders
 import jakarta.ws.rs.core.UriInfo
 import java.util.*
 import org.eclipse.microprofile.config.inject.ConfigProperty
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.InputStreamReader
 
 @ApplicationScoped
 class TranslationService {
+
+    private val logger: Logger = LoggerFactory.getLogger(TranslationService::class.java)
 
     @Inject
     lateinit var appMessages: AppMessages
@@ -204,32 +208,36 @@ class TranslationService {
         }
     }
 
-    private fun getCurrentLocale(): Locale {
-        // Try to get locale from Accept-Language header
-        val acceptLanguage = headers.getHeaderString(HttpHeaders.ACCEPT_LANGUAGE)
-        if (!acceptLanguage.isNullOrBlank()) {
-            val tag = Locale.LanguageRange.parse(acceptLanguage)
-                .firstOrNull()
-                ?.range
+    fun getCurrentLocale(): Locale {
+        return try {
+            // Get Accept-Language header safely
+            val acceptLanguage = headers.acceptableLanguages.firstOrNull()
 
-            if (!tag.isNullOrBlank()) {
-                val locale = Locale.forLanguageTag(tag)
-                if (locale.language == "en" || locale.language == "fa") {
-                    return locale
+            if (acceptLanguage != null && acceptLanguage.language.isNotBlank()) {
+                // Validate it's a real locale
+                if (isValidLocale(acceptLanguage)) {
+                    acceptLanguage
+                } else {
+                    Locale.ENGLISH
                 }
+            } else {
+                Locale.ENGLISH
             }
+        } catch (e: Exception) {
+            logger.warn("Error parsing Accept-Language header, using English fallback", e)
+            Locale.ENGLISH
         }
-
-        // Try to get locale from query parameter
-        val langParam = uriInfo.queryParameters.getFirst("lang")
-        if (langParam == "fa" || langParam == "en") {
-            return Locale.of(langParam)
-        }
-
-        // Return default locale
-        return Locale.of(defaultLocale.language)
     }
 
+    private fun isValidLocale(locale: Locale): Boolean {
+        return try {
+            // Check if it's a valid locale by trying to get available locales
+            val availableLocales = Locale.getAvailableLocales()
+            availableLocales.any { it.language == locale.language }
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     fun getCurrentLanguage(): Locale {
         return getCurrentLocale()
