@@ -16,7 +16,7 @@ class UserSettings : PanacheEntity() {
     lateinit var user: User
 
     @Column(name = "preferred_language", nullable = false)
-    var preferredLanguage: Locale = Locale.ENGLISH // Default: English
+    var preferredLanguage: String = "en"
 
     @Column(name = "font_size", nullable = false)
     var fontSize: String = "medium" // small, medium, large

@@ -1,4 +1,4 @@
-package com.taali.infrastructure.persistence.repository.user
+package com.taali.domain.repository.user
 
 import com.taali.domain.model.user.User
 import com.taali.domain.model.user.UserSettings
@@ -35,7 +35,7 @@ class UserSettingsRepository : PanacheRepository<UserSettings> {
     }
 
     @Transactional
-    fun updatePreferredLanguage(userId: Long, language: Locale): UserSettings? {
+    fun updatePreferredLanguage(userId: Long, language: String): UserSettings? {
         val settings = findByUserId(userId)
         settings?.let {
             it.preferredLanguage = language

@@ -180,6 +180,7 @@
     </dependencies>
 
     <build>
+        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <plugins>
             <!-- Quarkus Plugin -->
             <plugin>

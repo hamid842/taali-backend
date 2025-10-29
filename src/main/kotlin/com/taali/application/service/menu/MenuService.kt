@@ -1,9 +1,11 @@
-package com.taali.domain.service.menu
+package com.taali.application.service.menu
 
 import com.taali.api.dto.menu.MenuItemDto
 import com.taali.domain.enum.UserRole
 import com.taali.domain.model.menu.MenuItem
-import com.taali.infrastructure.persistence.repository.menu.MenuItemRepository
+import com.taali.domain.repository.menu.MenuItemRepository
+import com.taali.shared.RequestContext
+import com.taali.shared.TranslationService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.annotation.PostConstruct
@@ -11,7 +13,9 @@ import jakarta.transaction.Transactional
 
 @ApplicationScoped
 class MenuService(
-    @Inject val menuItemRepository: MenuItemRepository
+    @Inject val menuItemRepository: MenuItemRepository,
+    @Inject val translationService: TranslationService,
+    @Inject val requestContext: RequestContext
 ) {
 
     @PostConstruct
@@ -24,7 +28,7 @@ class MenuService(
 
     fun getMenuForRole(role: UserRole): List<MenuItemDto> {
         val menuItems = menuItemRepository.findByRole(role.name)
-        return buildMenuTree(menuItems)
+        return buildMenuTree(menuItems, requestContext.language) // Pass locale to buildMenuTree
     }
 
     fun getPermissionsForRole(role: UserRole): List<String> {
@@ -75,19 +79,18 @@ class MenuService(
 
     fun getAllMenuItems(): List<MenuItemDto> {
         val allItems = menuItemRepository.listAll()
-        return buildMenuTree(allItems)
+        return buildMenuTree(allItems, "en") // Default to English
     }
 
     fun getMenuItemsByPermission(permission: String): List<MenuItemDto> {
         val menuItems = menuItemRepository.findByRequiredPermission(permission)
-        return buildMenuTree(menuItems)
+        return buildMenuTree(menuItems, "en") // Default to English
     }
 
     fun getMenuHierarchy(): List<MenuItemDto> {
         val rootItems = menuItemRepository.findByParentIsNull()
-        return buildMenuTree(rootItems)
+        return buildMenuTree(rootItems, "en") // Default to English
     }
-
 
     @Transactional
     fun createMenuItem(
@@ -96,9 +99,9 @@ class MenuService(
         route: String? = null,
         orderIndex: Int = 0,
         roles: Set<UserRole>,
-        parent: MenuItem? = null, // Changed from MenuItemDto to MenuItem
+        parent: MenuItem? = null,
         requiredPermission: String? = null
-    ): MenuItem { // Changed return type to MenuItem
+    ): MenuItem {
         return MenuItem().apply {
             this.titleKey = titleKey
             this.icon = icon
@@ -111,27 +114,27 @@ class MenuService(
     }
 
     @Transactional
-    fun updateMenuItemOrder(menuItemId: Long, newOrder: Int): MenuItem? { // Changed return type
+    fun updateMenuItemOrder(menuItemId: Long, newOrder: Int): MenuItem? {
         val menuItem = menuItemRepository.findById(menuItemId)
         menuItem?.orderIndex = newOrder
         return menuItem
     }
 
     @Transactional
-    fun addRoleToMenuItem(menuItemId: Long, role: UserRole): MenuItem? { // Changed return type
+    fun addRoleToMenuItem(menuItemId: Long, role: UserRole): MenuItem? {
         val menuItem = menuItemRepository.findById(menuItemId)
         menuItem?.allowedRoles?.add(role.name)
         return menuItem
     }
 
     @Transactional
-    fun removeRoleFromMenuItem(menuItemId: Long, role: UserRole): MenuItem? { // Changed return type
+    fun removeRoleFromMenuItem(menuItemId: Long, role: UserRole): MenuItem? {
         val menuItem = menuItemRepository.findById(menuItemId)
         menuItem?.allowedRoles?.remove(role.name)
         return menuItem
     }
 
-    fun hasAccessToMenuItem(menuItem: MenuItem, userRole: UserRole): Boolean { // Changed parameter type
+    fun hasAccessToMenuItem(menuItem: MenuItem, userRole: UserRole): Boolean {
         return menuItem.allowedRoles.contains(userRole.name)
     }
 
@@ -141,22 +144,28 @@ class MenuService(
             .map { it.route!! }
     }
 
-    private fun buildMenuTree(menuItems: List<MenuItem>): List<MenuItemDto> {
+    // Updated to accept locale parameter
+    private fun buildMenuTree(menuItems: List<MenuItem>, locale: String): List<MenuItemDto> {
         val rootItems = menuItems.filter { it.parent == null }
             .sortedBy { it.orderIndex }
 
-        return rootItems.map { mapToDto(it, menuItems) }
+        return rootItems.map { mapToDto(it, menuItems, locale) }
     }
 
-    private fun mapToDto(menuItem: MenuItem, allItems: List<MenuItem>): MenuItemDto {
+    // Updated to accept locale parameter and translate titles
+    private fun mapToDto(menuItem: MenuItem, allItems: List<MenuItem>, locale: String): MenuItemDto {
         val children = allItems
             .filter { it.parent?.id == menuItem.id }
             .sortedBy { it.orderIndex }
-            .map { mapToDto(it, allItems) }
+            .map { mapToDto(it, allItems, locale) }
+
+        // Translate the title using the translation service
+        val translatedTitle = translationService.translate(menuItem.titleKey, locale)
 
         return MenuItemDto(
             id = menuItem.id,
             titleKey = menuItem.titleKey,
+            title = translatedTitle, // Add translated title
             icon = menuItem.icon,
             route = menuItem.route,
             path = menuItem.path,

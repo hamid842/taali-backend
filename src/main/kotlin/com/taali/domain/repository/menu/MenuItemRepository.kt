@@ -1,4 +1,4 @@
-package com.taali.infrastructure.persistence.repository.menu
+package com.taali.domain.repository.menu
 
 import com.taali.domain.model.menu.MenuItem
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepository

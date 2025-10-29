@@ -1,11 +1,10 @@
 package com.taali.api.dto.user
 
 import java.time.LocalDateTime
-import java.util.Locale
 
 data class UserSettingsDto(
     val id: Long? = null,
-    val preferredLanguage: Locale,
+    val preferredLanguage: String,
     val fontSize: String,
     val theme: String,
     val primaryColor: String,
@@ -16,7 +15,7 @@ data class UserSettingsDto(
 )
 
 data class UpdateUserSettingsRequest(
-    val preferredLanguage: Locale? = null,
+    val preferredLanguage: String? = null,
     val fontSize: String? = null,
     val theme: String? = null,
     val primaryColor: String? = null,

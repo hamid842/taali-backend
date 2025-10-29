@@ -1,4 +1,4 @@
-package com.taali.domain.service.user
+package com.taali.application.service.user
 
 import com.taali.api.dto.menu.MenuItemDto
 import com.taali.api.dto.menu.UserMenuResponse
@@ -6,9 +6,9 @@ import com.taali.api.dto.user.UpdateUserSettingsRequest
 import com.taali.api.dto.user.UserSettingsDto
 import com.taali.domain.model.user.User
 import com.taali.domain.model.user.UserSettings
-import com.taali.domain.service.menu.MenuService
-import com.taali.domain.service.shared.TranslationService
-import com.taali.infrastructure.persistence.repository.user.UserSettingsRepository
+import com.taali.application.service.menu.MenuService
+import com.taali.shared.TranslationService
+import com.taali.domain.repository.user.UserSettingsRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import java.util.Locale
@@ -29,7 +29,7 @@ class UserSettingsService(
     fun updateUserSettings(user: User, request: UpdateUserSettingsRequest): UserSettingsDto {
         val settings = userSettingsRepository.findOrCreateDefault(user)
 
-        request.preferredLanguage?.let { settings.preferredLanguage = it }
+        request.preferredLanguage?.let { settings.preferredLanguage = it.toString() }
         request.fontSize?.let { settings.fontSize = it }
         request.theme?.let { settings.theme = it }
         request.primaryColor?.let { settings.primaryColor = it }
@@ -73,9 +73,9 @@ class UserSettingsService(
         )
     }
 
-    private fun translateMenuItem(menuItem: MenuItemDto, locale: Locale): MenuItemDto {
+    private fun translateMenuItem(menuItem: MenuItemDto, locale: String): MenuItemDto {
         return menuItem.copy(
-            title = translationService.getMessage(menuItem.titleKey, locale),
+            title = translationService.translate(menuItem.titleKey, locale),
             children = menuItem.children.map { translateMenuItem(it, locale) }
         )
     }

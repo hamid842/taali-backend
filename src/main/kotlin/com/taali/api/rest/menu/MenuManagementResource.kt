@@ -2,12 +2,56 @@ package com.taali.api.rest.menu
 
 import com.taali.api.dto.menu.*
 import com.taali.domain.enum.UserRole
-import com.taali.domain.service.menu.MenuService
+import com.taali.application.service.menu.MenuService
+import com.taali.shared.RequestContext
+import jakarta.annotation.security.PermitAll
 import jakarta.annotation.security.RolesAllowed
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+
+@Path("/api/menu")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+class MenuResource {
+
+    @Inject
+    lateinit var menuService: MenuService
+
+    @Inject
+    lateinit var requestContext: RequestContext
+
+    @GET
+    @Path("/user")
+    @PermitAll
+    fun getUserMenu(
+        @QueryParam("role") role: String,
+    ): Response {
+        try {
+            // Parse user role
+            val userRole = UserRole.valueOf(role.uppercase())
+
+            val menuItems = menuService.getMenuForRole(userRole)
+
+            return Response.ok(menuItems).build()
+        } catch (e: IllegalArgumentException) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(
+                    mapOf(
+                        "error" to "Invalid role: $role. Valid roles: ${
+                            UserRole.entries.joinToString { it.name }
+                        }"
+                    )
+                )
+                .build()
+        } catch (e: Exception) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(mapOf("error" to "Failed to fetch menu: ${e.message}"))
+                .build()
+        }
+    }
+}
 
 @Path("/api/admin/menu")
 @Produces(MediaType.APPLICATION_JSON)
@@ -106,19 +150,19 @@ class MenuManagementResource {
         return Response.ok(menuItems).build()
     }
 
-    @GET
-    @Path("/roles/{role}")
-    fun getMenuItemsByRole(@PathParam("role") role: String): Response {
-        try {
-            val userRole = UserRole.valueOf(role.uppercase())
-            val menuItems = menuService.getMenuForRole(userRole)
-            return Response.ok(menuItems).build()
-        } catch (e: IllegalArgumentException) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "Invalid role: $role"))
-                .build()
-        }
-    }
+//    @GET
+//    @Path("/roles/{role}")
+//    fun getMenuItemsByRole(@PathParam("role") role: String): Response {
+//        try {
+//            val userRole = UserRole.valueOf(role.uppercase())
+//            val menuItems = menuService.getMenuForRole(userRole)
+//            return Response.ok(menuItems).build()
+//        } catch (e: IllegalArgumentException) {
+//            return Response.status(Response.Status.BAD_REQUEST)
+//                .entity(mapOf("error" to "Invalid role: $role"))
+//                .build()
+//        }
+//    }
 
     @DELETE
     @Path("/{id}")
