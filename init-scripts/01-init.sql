@@ -144,38 +144,38 @@ SELECT setval('refresh_tokens_seq', 1);
 SELECT setval('menu_items_seq', 1);
 -- Insert default menu items
 INSERT INTO menu_items (title_key, icon, route, path, order_index, required_permission) VALUES
-('menu.dashboard', 'dashboard', '/dashboard', '/dashboard', 1, NULL),
-('menu.schoolManagement', 'school', NULL, NULL, 2, NULL),
-('menu.userManagement', 'people', NULL, NULL, 3, NULL),
-('menu.finance', 'attach_money', NULL, NULL, 4, NULL),
-('menu.teacherManagement', 'person', NULL, NULL, 5, NULL),
-('menu.classManagement', 'class', NULL, NULL, 6, NULL),
-('menu.studentManagement', 'person', NULL, NULL, 7, NULL),
-('menu.parentManagement', 'family_restroom', NULL, NULL, 8, NULL),
-('menu.attendance', 'event_available', NULL, NULL, 9, NULL),
-('menu.assignments', 'assignment', NULL, NULL, 10, NULL),
-('menu.myProfile', 'person', '/profile', '/profile', 11, NULL)
+('menu_dashboard', 'dashboard', '/dashboard', '/dashboard', 1, NULL),
+('menu_school_management', 'school', NULL, NULL, 2, NULL),
+('menu_user_management', 'people', NULL, NULL, 3, NULL),
+('menu_finance', 'attach_money', NULL, NULL, 4, NULL),
+('menu_teacher_management', 'person', NULL, NULL, 5, NULL),
+('menu_class_management', 'class', NULL, NULL, 6, NULL),
+('menu_student_management', 'person', NULL, NULL, 7, NULL),
+('menu_parent_management', 'family_restroom', NULL, NULL, 8, NULL),
+('menu_attendance', 'event_available', NULL, NULL, 9, NULL),
+('menu_assignments', 'assignment', NULL, NULL, 10, NULL),
+('menu_my_profile', 'person', '/profile', '/profile', 11, NULL)
 ON CONFLICT (title_key) DO NOTHING;
 
 -- Insert submenu items
 INSERT INTO menu_items (title_key, icon, route, path, order_index, required_permission, parent_id)
-SELECT 'menu.createSchool', 'add', '/schools/create', '/schools/create', 1, NULL, id
-FROM menu_items WHERE title_key = 'menu.schoolManagement'
+SELECT 'menu_create_school', 'add', '/schools/create', '/schools/create', 1, NULL, id
+FROM menu_items WHERE title_key = 'menu_school_management'
 ON CONFLICT (title_key) DO NOTHING;
 
 INSERT INTO menu_items (title_key, icon, route, path, order_index, required_permission, parent_id)
-SELECT 'menu.listSchools', 'list', '/schools', '/schools', 2, NULL, id
-FROM menu_items WHERE title_key = 'menu.schoolManagement'
+SELECT 'menu_list_schools', 'list', '/schools', '/schools', 2, NULL, id
+FROM menu_items WHERE title_key = 'menu_school_management'
 ON CONFLICT (title_key) DO NOTHING;
 
 INSERT INTO menu_items (title_key, icon, route, path, order_index, required_permission, parent_id)
-SELECT 'menu.createUser', 'person_add', '/users/create', '/users/create', 1, NULL, id
-FROM menu_items WHERE title_key = 'menu.userManagement'
+SELECT 'menu_create_user', 'person_add', '/users/create', '/users/create', 1, NULL, id
+FROM menu_items WHERE title_key = 'menu_user_management'
 ON CONFLICT (title_key) DO NOTHING;
 
 INSERT INTO menu_items (title_key, icon, route, path, order_index, required_permission, parent_id)
-SELECT 'menu.listUsers', 'people', '/users', '/users', 2, NULL, id
-FROM menu_items WHERE title_key = 'menu.userManagement'
+SELECT 'menu_list_users', 'people', '/users', '/users', 2, NULL, id
+FROM menu_items WHERE title_key = 'menu_user_management'
 ON CONFLICT (title_key) DO NOTHING;
 
 -- Assign roles to menu items
@@ -187,23 +187,23 @@ ON CONFLICT (menu_item_id, role) DO NOTHING;
 -- Teacher specific menus
 INSERT INTO menu_item_roles (menu_item_id, role)
 SELECT id, 'TEACHER' FROM menu_items
-WHERE title_key IN ('menu.dashboard', 'menu.myProfile', 'menu.myClasses', 'menu.myStudents')
+WHERE title_key IN ('menu_dashboard', 'menu_my_profile', 'menu_my_classes', 'menu.myStudents')
 ON CONFLICT (menu_item_id, role) DO NOTHING;
 
 -- Student specific menus
 INSERT INTO menu_item_roles (menu_item_id, role)
 SELECT id, 'STUDENT' FROM menu_items
-WHERE title_key IN ('menu.dashboard', 'menu.myProfile', 'menu.myGrades')
+WHERE title_key IN ('menu_dashboard', 'menu_my_profile', 'menu_my_grades')
 ON CONFLICT (menu_item_id, role) DO NOTHING;
 
 -- Parent specific menus
 INSERT INTO menu_item_roles (menu_item_id, role)
 SELECT id, 'PARENT' FROM menu_items
-WHERE title_key IN ('menu.dashboard', 'menu.myProfile', 'menu.myChildren', 'menu.childrenGrades', 'menu.childrenAttendance')
+WHERE title_key IN ('menu_dashboard', 'menu_my_profile', 'menu_my_children', 'menu.childrenGrades', 'menu.childrenAttendance')
 ON CONFLICT (menu_item_id, role) DO NOTHING;
 
 -- Supervisor specific menus
 INSERT INTO menu_item_roles (menu_item_id, role)
 SELECT id, 'SUPERVISOR' FROM menu_items
-WHERE title_key IN ('menu.dashboard', 'menu.myProfile', 'menu.schoolManagement')
+WHERE title_key IN ('menu_dashboard', 'menu_my_profile', 'menu_school_management')
 ON CONFLICT (menu_item_id, role) DO NOTHING;

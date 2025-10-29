@@ -185,10 +185,10 @@ class MenuService(
         menuItemRepository.deleteAll()
 
         // Admin Menu
-        val adminDashboard = createMenuItem("menu.dashboard", "home", "/admin/dashboard", 0, setOf(UserRole.ADMIN))
-        val schoolManagement = createMenuItem("menu.schoolManagement", "building", null, 1, setOf(UserRole.ADMIN))
+        val adminDashboard = createMenuItem("menu_dashboard", "home", "/admin/dashboard", 0, setOf(UserRole.ADMIN))
+        val schoolManagement = createMenuItem("menu_school_management", "building", null, 1, setOf(UserRole.ADMIN))
         createMenuItem(
-            "menu.createSchool",
+            "menu_create_school",
             "plus",
             "/admin/schools/create",
             0,
@@ -197,7 +197,7 @@ class MenuService(
             "school:create"
         )
         createMenuItem(
-            "menu.listSchools",
+            "menu_list_schools",
             "list",
             "/admin/schools",
             1,
@@ -206,9 +206,9 @@ class MenuService(
             "school:read"
         )
 
-        val userManagement = createMenuItem("menu.userManagement", "users", null, 2, setOf(UserRole.ADMIN))
+        val userManagement = createMenuItem("menu_user_management", "users", null, 2, setOf(UserRole.ADMIN))
         createMenuItem(
-            "menu.createUser",
+            "menu_create_user",
             "user-plus",
             "/admin/users/create",
             0,
@@ -216,10 +216,18 @@ class MenuService(
             userManagement,
             "user:create"
         )
-        createMenuItem("menu.listUsers", "users", "/admin/users", 1, setOf(UserRole.ADMIN), userManagement, "user:read")
+        createMenuItem(
+            "menu_list_users",
+            "users",
+            "/admin/users",
+            1,
+            setOf(UserRole.ADMIN),
+            userManagement,
+            "user:read"
+        )
 
         createMenuItem(
-            "menu.finance",
+            "menu_finance",
             "dollar-sign",
             "/admin/finance",
             3,
@@ -229,9 +237,9 @@ class MenuService(
 
         // Supervisor Menu
         val supervisorDashboard =
-            createMenuItem("menu.dashboard", "home", "/supervisor/dashboard", 0, setOf(UserRole.SUPERVISOR))
+            createMenuItem("menu_dashboard", "home", "/supervisor/dashboard", 0, setOf(UserRole.SUPERVISOR))
         createMenuItem(
-            "menu.teacherManagement",
+            "menu_teacher_management",
             "user-check",
             "/supervisor/teachers",
             1,
@@ -239,7 +247,7 @@ class MenuService(
             requiredPermission = "teacher:read"
         )
         createMenuItem(
-            "menu.classManagement",
+            "menu_class_management",
             "users",
             "/supervisor/classes",
             2,
@@ -247,7 +255,7 @@ class MenuService(
             requiredPermission = "class:read"
         )
         createMenuItem(
-            "menu.studentManagement",
+            "menu_student_management",
             "graduation-cap",
             "/supervisor/students",
             3,
@@ -255,7 +263,7 @@ class MenuService(
             requiredPermission = "student:read"
         )
         createMenuItem(
-            "menu.parentManagement",
+            "menu_parent_management",
             "user",
             "/supervisor/parents",
             4,
@@ -265,9 +273,9 @@ class MenuService(
 
         // Teacher Menu
         val teacherDashboard =
-            createMenuItem("menu.dashboard", "home", "/teacher/dashboard", 0, setOf(UserRole.TEACHER))
+            createMenuItem("menu_dashboard", "home", "/teacher/dashboard", 0, setOf(UserRole.TEACHER))
         createMenuItem(
-            "menu.myClasses",
+            "menu_my_classes",
             "book-open",
             "/teacher/my-classes",
             1,
@@ -275,7 +283,7 @@ class MenuService(
             requiredPermission = "class:read"
         )
         createMenuItem(
-            "menu.myStudents",
+            "menu_my_students",
             "users",
             "/teacher/my-students",
             2,
@@ -283,7 +291,7 @@ class MenuService(
             requiredPermission = "student:read"
         )
         createMenuItem(
-            "menu.attendance",
+            "menu_attendance",
             "clipboard-check",
             "/teacher/attendance",
             3,
@@ -291,7 +299,7 @@ class MenuService(
             requiredPermission = "attendance:manage"
         )
         createMenuItem(
-            "menu.assignments",
+            "menu_assignments",
             "file-text",
             "/teacher/assignments",
             4,
@@ -301,9 +309,9 @@ class MenuService(
 
         // Student Menu
         val studentDashboard =
-            createMenuItem("menu.dashboard", "home", "/student/dashboard", 0, setOf(UserRole.STUDENT))
+            createMenuItem("menu_dashboard", "home", "/student/dashboard", 0, setOf(UserRole.STUDENT))
         createMenuItem(
-            "menu.myProfile",
+            "menu_my_profile",
             "user",
             "/student/profile",
             1,
@@ -311,7 +319,7 @@ class MenuService(
             requiredPermission = "profile:read"
         )
         createMenuItem(
-            "menu.myClasses",
+            "menu_my_classes",
             "book-open",
             "/student/my-classes",
             2,
@@ -319,7 +327,7 @@ class MenuService(
             requiredPermission = "classes:read"
         )
         createMenuItem(
-            "menu.myGrades",
+            "menu_my_grades",
             "award",
             "/student/grades",
             3,
@@ -328,9 +336,9 @@ class MenuService(
         )
 
         // Parent Menu
-        val parentDashboard = createMenuItem("menu.dashboard", "home", "/parent/dashboard", 0, setOf(UserRole.PARENT))
+        val parentDashboard = createMenuItem("menu_dashboard", "home", "/parent/dashboard", 0, setOf(UserRole.PARENT))
         createMenuItem(
-            "menu.myChildren",
+            "menu_my_children",
             "users",
             "/parent/my-children",
             1,
@@ -338,7 +346,7 @@ class MenuService(
             requiredPermission = "children:read"
         )
         createMenuItem(
-            "menu.childrenGrades",
+            "menu_children_grades",
             "award",
             "/parent/children-grades",
             2,
@@ -346,7 +354,7 @@ class MenuService(
             requiredPermission = "children_grades:read"
         )
         createMenuItem(
-            "menu.childrenAttendance",
+            "menu_children_attendance",
             "clipboard-check",
             "/parent/children-attendance",
             3,
@@ -354,7 +362,7 @@ class MenuService(
             requiredPermission = "children_attendance:read"
         )
         createMenuItem(
-            "menu.payments",
+            "menu_payments",
             "credit-card",
             "/parent/payments",
             4,
@@ -364,9 +372,9 @@ class MenuService(
 
         // Canteen Operator Menu
         val canteenDashboard =
-            createMenuItem("menu.dashboard", "home", "/canteen/dashboard", 0, setOf(UserRole.CANTEEN_OPERATOR))
+            createMenuItem("menu_dashboard", "home", "/canteen/dashboard", 0, setOf(UserRole.CANTEEN_OPERATOR))
         createMenuItem(
-            "menu.foodMenu",
+            "menu_food_menu",
             "utensils",
             "/canteen/food-menu",
             1,
@@ -374,7 +382,7 @@ class MenuService(
             requiredPermission = "menu:read"
         )
         createMenuItem(
-            "menu.orders",
+            "menu_orders",
             "shopping-cart",
             "/canteen/orders",
             2,
@@ -382,7 +390,7 @@ class MenuService(
             requiredPermission = "orders:manage"
         )
         createMenuItem(
-            "menu.inventory",
+            "menu_inventory",
             "package",
             "/canteen/inventory",
             3,
@@ -392,9 +400,9 @@ class MenuService(
 
         // Finance Team Menu
         val financeDashboard =
-            createMenuItem("menu.dashboard", "home", "/finance/dashboard", 0, setOf(UserRole.FINANCE_TEAM))
+            createMenuItem("menu_dashboard", "home", "/finance/dashboard", 0, setOf(UserRole.FINANCE_TEAM))
         createMenuItem(
-            "menu.financialReports",
+            "menu_financial_reports",
             "bar-chart",
             "/finance/financial-reports",
             1,
@@ -402,7 +410,7 @@ class MenuService(
             requiredPermission = "financial_reports:view"
         )
         createMenuItem(
-            "menu.paymentManagement",
+            "menu_payment_management",
             "credit-card",
             "/finance/payments",
             2,
@@ -410,7 +418,7 @@ class MenuService(
             requiredPermission = "payments:manage"
         )
         createMenuItem(
-            "menu.invoices",
+            "menu_invoices",
             "file-text",
             "/finance/invoices",
             3,

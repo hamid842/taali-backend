@@ -5,24 +5,24 @@ import com.taali.domain.model.menu.MenuItem
 data class MenuItemDto(
     val id: Long? = null,
     val titleKey: String,
-    val title: String? = null, // Make this nullable since it will be populated later
+    val title: String? = null,
     val icon: String? = null,
     val route: String? = null,
     val path: String? = null,
     val orderIndex: Int,
     val children: List<MenuItemDto> = emptyList(),
     val requiredPermission: String? = null,
-    val allowedRoles: Set<String> = emptySet(), // Added this field
-    val parentId: Long? = null, // Added this field
-    val isRootItem: Boolean = false, // Added this field
-    val hasChildren: Boolean = false // Added this field
+    val allowedRoles: Set<String> = emptySet(),
+    val parentId: Long? = null,
+    val isRootItem: Boolean = false,
+    val hasChildren: Boolean = false
 )
 
 data class UserMenuResponse(
     val menu: List<MenuItemDto>,
     val userRole: String,
     val permissions: List<String>,
-    val accessibleRoutes: List<String> = emptyList() // Added for frontend routing
+    val accessibleRoutes: List<String> = emptyList()
 )
 
 // Extension functions for conversion
