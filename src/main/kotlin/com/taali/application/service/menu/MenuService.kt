@@ -33,6 +33,12 @@ class MenuService(
 
     fun getPermissionsForRole(role: UserRole): List<String> {
         return when (role) {
+            UserRole.OWNER -> listOf(
+                "school:create", "school:read", "school:update", "school:delete",
+                "user:create", "user:read", "user:update", "user:delete",
+                "finance:read", "reports:generate", "system:manage"
+            )
+
             UserRole.ADMIN -> listOf(
                 "school:create", "school:read", "school:update", "school:delete",
                 "user:create", "user:read", "user:update", "user:delete",
@@ -74,6 +80,8 @@ class MenuService(
                 "invoices:create", "invoices:read", "invoices:update",
                 "financial_reports:view"
             )
+
+
         }
     }
 
