@@ -92,6 +92,46 @@ interface FarsiAppMessages : AppMessages {
     @Message("انبار")
     override fun menu_inventory(): String
 
+    // NEW MENU ITEMS - Added Farsi translations
+    @Message("صورتحساب")
+    override fun menu_billing(): String
+
+    @Message("مدیریت شهریه")
+    override fun menu_fee_management(): String
+
+    @Message("مدیریت هزینه‌ها")
+    override fun menu_expense_management(): String
+
+    @Message("نمرات")
+    override fun menu_grades(): String
+
+    @Message("طرح‌های درسی")
+    override fun menu_lesson_plans(): String
+
+    @Message("تکالیف من")
+    override fun menu_my_assignments(): String
+
+    @Message("حضور و غیاب من")
+    override fun menu_my_attendance(): String
+
+    @Message("برنامه زمانی")
+    override fun menu_schedule(): String
+
+    @Message("اعلان‌ها")
+    override fun menu_notifications(): String
+
+    @Message("گزارش‌های حضور و غیاب")
+    override fun menu_attendance_reports(): String
+
+    @Message("تقویم آموزشی")
+    override fun menu_academic_calendar(): String
+
+    @Message("گزارش‌های فروش")
+    override fun menu_sales_reports(): String
+
+    @Message("پیگیری پرداخت")
+    override fun menu_payment_tracking(): String
+
     // Validation Messages
     @Message("نام الزامی است")
     override fun validation_first_name_required(): String

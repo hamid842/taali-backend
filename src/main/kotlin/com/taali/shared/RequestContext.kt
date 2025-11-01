@@ -1,11 +1,17 @@
 package com.taali.shared
 
-import com.taali.domain.enum.UserRole
-import jakarta.enterprise.context.RequestScoped
+import jakarta.enterprise.context.ApplicationScoped
 
-@RequestScoped
+@ApplicationScoped
 class RequestContext {
-    var language: String = "en"
-    var userRole: UserRole? = null
-    // Add other common request data here
+    final var language: String = "en"
+        private set
+
+    fun setLanguageFromHeader(header: String?) {
+        language = when {
+            header.isNullOrBlank() -> "en"
+            header.startsWith("fa", ignoreCase = true) -> "fa"
+            else -> "en"
+        }
+    }
 }

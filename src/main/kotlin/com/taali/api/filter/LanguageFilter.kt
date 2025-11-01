@@ -1,15 +1,20 @@
 package com.taali.api.filter
 
+import com.taali.shared.RequestContext
+import jakarta.annotation.Priority
+import jakarta.inject.Inject
+import jakarta.ws.rs.Priorities
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.ext.Provider
-import java.util.Locale
 
 @Provider
-class LanguageFilter : ContainerRequestFilter {
+@Priority(Priorities.AUTHENTICATION)
+class LanguageFilter @Inject constructor(
+    private val requestContext: RequestContext
+) : ContainerRequestFilter {
     override fun filter(requestContext: ContainerRequestContext) {
-        val langHeader = requestContext.headers.getFirst("Accept-Language")
-        val locale = if (!langHeader.isNullOrBlank()) Locale.forLanguageTag(langHeader) else Locale.getDefault()
-        Locale.setDefault(locale)
+        val langHeader = requestContext.getHeaderString("Accept-Language")
+        this.requestContext.setLanguageFromHeader(langHeader)
     }
 }

@@ -3,7 +3,6 @@ package com.taali.api.rest.menu
 import com.taali.api.dto.menu.*
 import com.taali.domain.enum.UserRole
 import com.taali.application.service.menu.MenuService
-import com.taali.shared.RequestContext
 import jakarta.annotation.security.PermitAll
 import jakarta.annotation.security.RolesAllowed
 import jakarta.inject.Inject
@@ -19,9 +18,6 @@ class MenuResource {
     @Inject
     lateinit var menuService: MenuService
 
-    @Inject
-    lateinit var requestContext: RequestContext
-
     @GET
     @Path("/user")
     @PermitAll
@@ -29,11 +25,8 @@ class MenuResource {
         @QueryParam("role") role: String,
     ): Response {
         try {
-            // Parse user role
             val userRole = UserRole.valueOf(role.uppercase())
-
             val menuItems = menuService.getMenuForRole(userRole)
-
             return Response.ok(menuItems).build()
         } catch (e: IllegalArgumentException) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -56,7 +49,7 @@ class MenuResource {
 @Path("/api/admin/menu")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RolesAllowed("ADMIN")
+@RolesAllowed("ADMIN", "OWNER") // Allow both ADMIN and OWNER
 class MenuManagementResource {
 
     @Inject
@@ -83,6 +76,7 @@ class MenuManagementResource {
                 titleKey = request.titleKey,
                 icon = request.icon,
                 route = request.route,
+                path = request.path,
                 orderIndex = request.orderIndex,
                 roles = request.allowedRoles,
                 parent = parent,
@@ -149,20 +143,6 @@ class MenuManagementResource {
         val menuItems = menuService.getMenuItemsByPermission(permission)
         return Response.ok(menuItems).build()
     }
-
-//    @GET
-//    @Path("/roles/{role}")
-//    fun getMenuItemsByRole(@PathParam("role") role: String): Response {
-//        try {
-//            val userRole = UserRole.valueOf(role.uppercase())
-//            val menuItems = menuService.getMenuForRole(userRole)
-//            return Response.ok(menuItems).build()
-//        } catch (e: IllegalArgumentException) {
-//            return Response.status(Response.Status.BAD_REQUEST)
-//                .entity(mapOf("error" to "Invalid role: $role"))
-//                .build()
-//        }
-//    }
 
     @DELETE
     @Path("/{id}")

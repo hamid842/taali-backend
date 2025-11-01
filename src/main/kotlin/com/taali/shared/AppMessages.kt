@@ -92,6 +92,46 @@ interface AppMessages {
     @Message("Inventory")
     fun menu_inventory(): String
 
+    // NEW MENU ITEMS - Added based on the updated menu structure
+    @Message("Billing")
+    fun menu_billing(): String
+
+    @Message("Fee Management")
+    fun menu_fee_management(): String
+
+    @Message("Expense Management")
+    fun menu_expense_management(): String
+
+    @Message("Grades")
+    fun menu_grades(): String
+
+    @Message("Lesson Plans")
+    fun menu_lesson_plans(): String
+
+    @Message("My Assignments")
+    fun menu_my_assignments(): String
+
+    @Message("My Attendance")
+    fun menu_my_attendance(): String
+
+    @Message("Schedule")
+    fun menu_schedule(): String
+
+    @Message("Notifications")
+    fun menu_notifications(): String
+
+    @Message("Attendance Reports")
+    fun menu_attendance_reports(): String
+
+    @Message("Academic Calendar")
+    fun menu_academic_calendar(): String
+
+    @Message("Sales Reports")
+    fun menu_sales_reports(): String
+
+    @Message("Payment Tracking")
+    fun menu_payment_tracking(): String
+
     // Validation Messages
     @Message("First name is required")
     fun validation_first_name_required(): String

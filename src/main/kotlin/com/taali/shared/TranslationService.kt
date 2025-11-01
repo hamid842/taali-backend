@@ -81,6 +81,21 @@ class TranslationService {
                 "menu_payment_management" -> localizedMessages.menu_payment_management()
                 "menu_invoices" -> localizedMessages.menu_invoices()
 
+                // NEW MENU ITEMS - Added the missing menu items
+                "menu_billing" -> localizedMessages.menu_billing()
+                "menu_fee_management" -> localizedMessages.menu_fee_management()
+                "menu_expense_management" -> localizedMessages.menu_expense_management()
+                "menu_grades" -> localizedMessages.menu_grades()
+                "menu_lesson_plans" -> localizedMessages.menu_lesson_plans()
+                "menu_my_assignments" -> localizedMessages.menu_my_assignments()
+                "menu_my_attendance" -> localizedMessages.menu_my_attendance()
+                "menu_schedule" -> localizedMessages.menu_schedule()
+                "menu_notifications" -> localizedMessages.menu_notifications()
+                "menu_attendance_reports" -> localizedMessages.menu_attendance_reports()
+                "menu_academic_calendar" -> localizedMessages.menu_academic_calendar()
+                "menu_sales_reports" -> localizedMessages.menu_sales_reports()
+                "menu_payment_tracking" -> localizedMessages.menu_payment_tracking()
+
                 // Validation keys - updated to snake_case
                 "validation_first_name_required" -> localizedMessages.validation_first_name_required()
                 "validation_first_name_size" -> localizedMessages.validation_first_name_size()
