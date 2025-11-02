@@ -25,15 +25,13 @@ class SchoolResource {
     @RolesAllowed("OWNER")
     fun getMySchools(): Response {
         try {
-            val ownerId = requestContext.userId
-                ?: return Response.status(Response.Status.UNAUTHORIZED).build()
+            val ownerId = requestContext.userId ?: return Response.status(Response.Status.UNAUTHORIZED).build()
 
             val schools = schoolService.getSchoolsByOwner(ownerId)
             return Response.ok(schools).build()
         } catch (e: Exception) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to fetch schools: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to fetch schools: ${e.message}")).build()
         }
     }
 
@@ -41,19 +39,15 @@ class SchoolResource {
     @RolesAllowed("OWNER")
     fun createSchool(request: CreateSchoolRequest): Response {
         try {
-            val ownerId = requestContext.userId
-                ?: return Response.status(Response.Status.UNAUTHORIZED).build()
+            val ownerId = requestContext.userId ?: return Response.status(Response.Status.UNAUTHORIZED).build()
 
             val school = schoolService.createSchool(request, ownerId)
             return Response.status(Response.Status.CREATED).entity(school).build()
         } catch (e: IllegalArgumentException) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to e.message))
-                .build()
+            return Response.status(Response.Status.BAD_REQUEST).entity(mapOf("error" to e.message)).build()
         } catch (e: Exception) {
             return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "Failed to create school: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to create school: ${e.message}")).build()
         }
     }
 
@@ -62,14 +56,12 @@ class SchoolResource {
     @RolesAllowed("OWNER", "ADMIN")
     fun getSchool(@PathParam("id") id: Long): Response {
         try {
-            val school = schoolService.getSchoolById(id)
-                ?: return Response.status(Response.Status.NOT_FOUND).build()
+            val school = schoolService.getSchoolById(id) ?: return Response.status(Response.Status.NOT_FOUND).build()
 
             return Response.ok(school).build()
         } catch (e: Exception) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to fetch school: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to fetch school: ${e.message}")).build()
         }
     }
 
@@ -81,17 +73,12 @@ class SchoolResource {
             val school = schoolService.updateSchool(id, request)
             return Response.ok(school).build()
         } catch (e: NotFoundException) {
-            return Response.status(Response.Status.NOT_FOUND)
-                .entity(mapOf("error" to e.message))
-                .build()
+            return Response.status(Response.Status.NOT_FOUND).entity(mapOf("error" to e.message)).build()
         } catch (e: IllegalArgumentException) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to e.message))
-                .build()
+            return Response.status(Response.Status.BAD_REQUEST).entity(mapOf("error" to e.message)).build()
         } catch (e: Exception) {
             return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "Failed to update school: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to update school: ${e.message}")).build()
         }
     }
 
@@ -107,17 +94,29 @@ class SchoolResource {
                 Response.status(Response.Status.NOT_FOUND).build()
             }
         } catch (e: NotFoundException) {
-            return Response.status(Response.Status.NOT_FOUND)
-                .entity(mapOf("error" to e.message))
-                .build()
+            return Response.status(Response.Status.NOT_FOUND).entity(mapOf("error" to e.message)).build()
         } catch (e: IllegalStateException) {
-            return Response.status(Response.Status.CONFLICT)
-                .entity(mapOf("error" to e.message))
-                .build()
+            return Response.status(Response.Status.CONFLICT).entity(mapOf("error" to e.message)).build()
         } catch (e: Exception) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to delete school: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to delete school: ${e.message}")).build()
+        }
+    }
+
+    @PATCH
+    @Path("/{id}/logo")
+    @RolesAllowed("OWNER")
+    fun updateSchoolLogo(
+        @PathParam("id") id: Long, @QueryParam("imageUrl") imageUrl: String
+    ): Response {
+        try {
+            val school = schoolService.updateSchoolLogo(id, imageUrl)
+            return Response.ok(school).build()
+        } catch (e: NotFoundException) {
+            return Response.status(Response.Status.NOT_FOUND).entity(mapOf("error" to e.message)).build()
+        } catch (e: Exception) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(mapOf("error" to "Failed to update school logo: ${e.message}")).build()
         }
     }
 
@@ -130,8 +129,7 @@ class SchoolResource {
             return Response.ok(schools).build()
         } catch (e: Exception) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to search schools: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to search schools: ${e.message}")).build()
         }
     }
 }

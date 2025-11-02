@@ -48,8 +48,7 @@ class SchoolService {
 
     @Transactional
     fun updateSchool(id: Long, request: UpdateSchoolRequest): SchoolDto {
-        val school = schoolRepository.findById(id)
-            ?: throw NotFoundException("School with id $id not found")
+        val school = schoolRepository.findById(id) ?: throw NotFoundException("School with id $id not found")
 
         request.name?.let { school.name = it }
         request.code?.let {
@@ -69,8 +68,7 @@ class SchoolService {
 
     @Transactional
     fun deleteSchool(id: Long): Boolean {
-        val school = schoolRepository.findById(id)
-            ?: throw NotFoundException("School with id $id not found")
+        val school = schoolRepository.findById(id) ?: throw NotFoundException("School with id $id not found")
 
         // Check if school has users before deletion - FIXED: Use UserRepository
         val userCount = userRepository.countBySchoolId(id)
@@ -83,6 +81,40 @@ class SchoolService {
 
     fun searchSchools(query: String): List<SchoolDto> {
         return schoolRepository.findByNameContainingIgnoreCase(query).map { it.toDto() }
+    }
+
+    @Transactional
+    fun updateSchoolLogo(id: Long, imageUrl: String): SchoolDto {
+        val school = schoolRepository.findById(id) ?: throw NotFoundException("School with id $id not found")
+
+        // Validate the image URL format (basic validation)
+        if (imageUrl.isBlank()) {
+            throw IllegalArgumentException("Image URL cannot be empty")
+        }
+
+        // Optional: Add more URL validation if needed
+        if (!isValidImageUrl(imageUrl)) {
+            throw IllegalArgumentException("Invalid image URL format")
+        }
+
+        school.image = imageUrl
+        schoolRepository.persist(school)
+        return school.toDto()
+    }
+
+    private fun isValidImageUrl(url: String): Boolean {
+        // Basic URL validation - you can enhance this based on your needs
+        return try {
+            // Check if it's a data URL (base64) or regular URL
+            when {
+                url.startsWith("data:image/") -> true // Base64 image data
+                url.startsWith("/api/v1/uploads/schools/logos/") -> true // Our uploaded images
+                url.startsWith("http://") || url.startsWith("https://") -> true // External URLs
+                else -> false
+            }
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun School.toDto(): SchoolDto {

@@ -3,6 +3,7 @@ package com.taali.shared
 import io.quarkus.qute.i18n.Localized
 import io.quarkus.qute.i18n.MessageBundles
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
 import org.slf4j.LoggerFactory
 import java.util.Locale
 
@@ -10,6 +11,9 @@ import java.util.Locale
 class TranslationService {
 
     private val logger = LoggerFactory.getLogger(TranslationService::class.java)
+
+    @Inject
+    lateinit var requestContext: RequestContext
 
     // Main translation method without parameters
     fun translate(key: String): String {
@@ -35,7 +39,7 @@ class TranslationService {
     }
 
 
-    fun translateText(key: String, locale: String = Locale.getDefault().language, vararg args: Any): String {
+    fun translateText(key: String, locale: String = requestContext.language, vararg args: Any): String {
 
         return try {
             // Handle both "fa" and "fa-IR" locales
@@ -43,6 +47,7 @@ class TranslationService {
                 locale.equals("fa", ignoreCase = true) || locale.equals("fa-IR", ignoreCase = true) -> {
                     Locale.forLanguageTag("fa-IR")
                 }
+
                 else -> Locale.ENGLISH
             }
 
