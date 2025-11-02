@@ -36,7 +36,6 @@ class TranslationService {
 
 
     fun translateText(key: String, locale: String = Locale.getDefault().language, vararg args: Any): String {
-        logger.info("Using locale: $locale")
 
         return try {
             // Handle both "fa" and "fa-IR" locales
@@ -47,7 +46,6 @@ class TranslationService {
                 else -> Locale.ENGLISH
             }
 
-            logger.info("Resolved target locale: $targetLocale")
             val localizedMessages =
                 MessageBundles.get(AppMessages::class.java, Localized.Literal.of(targetLocale.language))
             when (key) {

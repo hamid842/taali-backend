@@ -15,7 +15,7 @@ import jakarta.ws.rs.core.SecurityContext
 import org.eclipse.microprofile.jwt.JsonWebToken
 import java.util.Locale
 
-@Path("/api/user")
+@Path("/user")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 class UserSettingsResource {

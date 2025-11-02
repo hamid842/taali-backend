@@ -3,14 +3,13 @@ package com.taali.api.rest.menu
 import com.taali.api.dto.menu.*
 import com.taali.domain.enum.UserRole
 import com.taali.application.service.menu.MenuService
-import jakarta.annotation.security.PermitAll
 import jakarta.annotation.security.RolesAllowed
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 
-@Path("/api/menu")
+@Path("/menu")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 class MenuResource {
@@ -20,7 +19,7 @@ class MenuResource {
 
     @GET
     @Path("/user")
-    @PermitAll
+    @RolesAllowed("ADMIN", "OWNER","TEACHER")
     fun getUserMenu(
         @QueryParam("role") role: String,
     ): Response {
@@ -46,7 +45,7 @@ class MenuResource {
     }
 }
 
-@Path("/api/admin/menu")
+@Path("/admin/menu")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RolesAllowed("ADMIN", "OWNER") // Allow both ADMIN and OWNER

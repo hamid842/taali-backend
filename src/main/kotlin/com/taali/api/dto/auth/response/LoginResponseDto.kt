@@ -1,12 +1,7 @@
 package com.taali.api.dto.auth.response
 
+import com.taali.api.dto.school.SchoolDto
 import java.util.UUID
-
-data class SchoolDto(
-    val id: Long?,
-    val name: String,
-    val code: String
-)
 
 data class LoginResponseDto(
     val success: Boolean,

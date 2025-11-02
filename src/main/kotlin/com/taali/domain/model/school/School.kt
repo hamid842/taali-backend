@@ -1,35 +1,55 @@
 package com.taali.domain.model.school
 
-import com.taali.domain.model.user.User
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntity
+import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntityBase
 import jakarta.persistence.*
-import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.UpdateTimestamp
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
-
 
 @Entity
 @Table(name = "schools")
-class School : PanacheEntity() {
+class School : PanacheEntityBase {
 
-    @Column(nullable = false)
-    lateinit var name: String
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "schools_seq")
+    @SequenceGenerator(name = "schools_seq", sequenceName = "schools_seq", allocationSize = 1)
+    var id: Long? = null
 
-    @Column(nullable = false)
-    lateinit var code: String
+    @Column(name = "name", nullable = false)
+    @field:NotBlank(message = "School name is required")
+    @field:Size(max = 255, message = "School name must not exceed 255 characters")
+    var name: String = ""
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
-    var owner: User? = null
+    @Column(name = "code", unique = true, nullable = false)
+    @field:NotBlank(message = "School code is required")
+    @field:Size(max = 50, message = "School code must not exceed 50 characters")
+    var code: String = ""
 
-    @OneToMany(mappedBy = "school")
-    var users: MutableSet<User> = mutableSetOf()
+    @Column(name = "image", length = 500)
+    var image: String? = null
 
-    @CreationTimestamp
+    @Column(name = "address", columnDefinition = "TEXT")
+    var address: String? = null
+
+    @Column(name = "email")
+    @field:Email(message = "Please provide a valid email address")
+    var email: String? = null
+
+    @Column(name = "phone", length = 20)
+    var phone: String? = null
+
+    @Column(name = "owner_id")
+    var ownerId: String? = null
+
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now()
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now()
+
+    @PreUpdate
+    fun preUpdate() {
+        updatedAt = LocalDateTime.now()
+    }
 }

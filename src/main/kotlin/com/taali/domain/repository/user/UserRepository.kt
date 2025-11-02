@@ -18,6 +18,10 @@ class UserRepository : PanacheRepository<User> {
         return find("phoneNumber", phoneNumber).firstResult()
     }
 
+    fun countBySchoolId(schoolId: Long): Long {
+        return count("schoolId", schoolId)
+    }
+
     fun existsByEmail(email: String): Boolean {
         return count("email", email) > 0
     }
