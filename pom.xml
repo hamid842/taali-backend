@@ -16,7 +16,8 @@
         <compiler-plugin.version>3.14.0</compiler-plugin.version>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
 
-        <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
+        <!-- Change to platform BOM -->
+        <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.version>3.8.3</quarkus.platform.version>
 
@@ -49,7 +50,16 @@
             <artifactId>quarkus-kotlin</artifactId>
         </dependency>
 
-        <!-- RESTEasy Reactive (Updated from classic RESTEasy) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+        </dependency>
+
+        <!-- RESTEasy Reactive -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-reactive</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
@@ -120,22 +130,10 @@
             <version>0.10.2</version>
         </dependency>
 
-        <!-- Kotlin Standard Library -->
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-        </dependency>
-
         <!-- Kotlin Reflection -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
-        </dependency>
-
-        <!-- Jackson Kotlin Module -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
 
         <!-- OpenAPI/Swagger -->
