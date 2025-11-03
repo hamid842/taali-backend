@@ -9,6 +9,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 DROP TABLE IF EXISTS menu_item_roles CASCADE;
 DROP TABLE IF EXISTS menu_items CASCADE;
 DROP TABLE IF EXISTS refresh_tokens CASCADE;
+DROP TABLE IF EXISTS classrooms CASCADE;
 DROP TABLE IF EXISTS schools CASCADE;  -- Add schools table drop
 DROP TABLE IF EXISTS users CASCADE;
 
@@ -16,6 +17,7 @@ DROP SEQUENCE IF EXISTS users_seq;
 DROP SEQUENCE IF EXISTS refresh_tokens_seq;
 DROP SEQUENCE IF EXISTS menu_items_seq;
 DROP SEQUENCE IF EXISTS schools_seq;  -- Add schools sequence drop
+DROP SEQUENCE IF EXISTS classrooms_seq;
 
 -- =============================================
 -- Create Sequences for Hibernate
@@ -65,6 +67,23 @@ CREATE TABLE users (
     FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE SET NULL
 );
 
+-- =============================================
+-- Classrooms Table
+-- =============================================
+
+CREATE TABLE classrooms (
+    id BIGINT PRIMARY KEY DEFAULT nextval('classrooms_seq'),
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    grade VARCHAR(50),
+    capacity INT,
+    school_id BIGINT NOT NULL,
+    teacher_id BIGINT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE SET NULL
+);
 -- Now update the schools table to reference users (was created above)
 -- Note: We already created schools table with owner_id reference
 
@@ -120,6 +139,11 @@ CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_user_id ON users(user_id);
 CREATE INDEX idx_users_status ON users(status);
 CREATE INDEX idx_users_school_id ON users(school_id);  -- New index
+
+-- Classrooms indexes
+CREATE INDEX idx_classrooms_school_id ON classrooms(school_id);
+CREATE INDEX idx_classrooms_teacher_id ON classrooms(teacher_id);
+CREATE INDEX idx_classrooms_code ON classrooms(code);
 
 -- Refresh tokens indexes
 CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
@@ -179,6 +203,7 @@ WHERE email = 'admin@taali.com';
 -- Update sequences to current max values
 SELECT setval('users_seq', (SELECT MAX(id) FROM users));
 SELECT setval('schools_seq', (SELECT MAX(id) FROM schools));
+SELECT setval('classrooms_seq', (SELECT MAX(id) FROM classrooms));
 SELECT setval('refresh_tokens_seq', 1);
 SELECT setval('menu_items_seq', 1);
 
