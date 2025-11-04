@@ -8,8 +8,8 @@ import jakarta.enterprise.context.ApplicationScoped
 @ApplicationScoped
 class SchoolRepository : PanacheRepository<School> {
 
-    fun findByOwnerId(ownerId: String?): List<School> {
-        return find("ownerId", ownerId as Any).list()
+    fun findByOwnerId(ownerId: String): List<School> {
+        return find("ownerId", ownerId).list()
     }
 
     fun findByCode(code: String): School? {
@@ -28,11 +28,15 @@ class SchoolRepository : PanacheRepository<School> {
         return findAll(Sort.by("name")).list()
     }
 
-    fun findByOwnerIdWithPagination(ownerId: Long, pageIndex: Int, pageSize: Int): List<School> {
+    fun findByOwnerIdWithPagination(ownerId: String, pageIndex: Int, pageSize: Int): List<School> {
         return find("ownerId", ownerId).page(pageIndex, pageSize).list()
     }
 
-    fun countByOwnerId(ownerId: Long): Long {
+    fun countByOwnerId(ownerId: String): Long {
         return count("ownerId", ownerId)
+    }
+
+    fun findByStatusAndOwnerId(status: String, ownerId: String): List<School> {
+        return find("status = ?1 and ownerId = ?2", status, ownerId).list()
     }
 }

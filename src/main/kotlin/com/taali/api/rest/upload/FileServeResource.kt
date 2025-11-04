@@ -47,10 +47,33 @@ class FileServeResource {
                     .build()
             }
 
-            val filePath: java.nio.file.Path = Paths.get(directory, filename)
+//            val filePath: java.nio.file.Path = Paths.get(directory, filename)
+//            if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
+//                return Response.status(Response.Status.NOT_FOUND)
+//                    .entity("File not found")
+//                    .build()
+//            }
+//
+//            val stream = StreamingOutput { output ->
+//                Files.newInputStream(filePath).use { input ->
+//                    input.copyTo(output)
+//                }
+//            }
+//
+//            val contentType = detectContentType(filePath)
+//            return Response.ok(stream)
+//                .type(contentType)
+//                .header("Cache-Control", "public, max-age=86400") // Cache for 1 day
+//                .build()
+            // Always resolve relative to project root (one level above /target if in prod)
+            val basePath = Paths.get(System.getProperty("user.dir"))
+            val filePath = basePath.resolve(directory).resolve(filename).normalize()
+
+            println(">>> Looking for file: ${filePath.toAbsolutePath()}") // <-- DEBUG
+
             if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
                 return Response.status(Response.Status.NOT_FOUND)
-                    .entity("File not found")
+                    .entity("File not found: ${filePath.toAbsolutePath()}")
                     .build()
             }
 
@@ -63,7 +86,7 @@ class FileServeResource {
             val contentType = detectContentType(filePath)
             return Response.ok(stream)
                 .type(contentType)
-                .header("Cache-Control", "public, max-age=86400") // Cache for 1 day
+                .header("Cache-Control", "public, max-age=86400")
                 .build()
 
         } catch (e: NoSuchFileException) {

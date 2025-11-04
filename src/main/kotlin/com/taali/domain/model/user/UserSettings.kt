@@ -1,15 +1,11 @@
 package com.taali.domain.model.user
 
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntity
+import com.taali.domain.model.common.AuditableEntity
 import jakarta.persistence.*
-import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.UpdateTimestamp
-import java.time.LocalDateTime
-import java.util.Locale
 
 @Entity
 @Table(name = "user_settings")
-class UserSettings : PanacheEntity() {
+class UserSettings : AuditableEntity() {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
@@ -36,13 +32,6 @@ class UserSettings : PanacheEntity() {
     @Column(name = "sms_notifications", nullable = false)
     var smsNotifications: Boolean = false
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    lateinit var createdAt: LocalDateTime
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    lateinit var updatedAt: LocalDateTime
 
     companion object {
         fun createDefault(user: User): UserSettings {

@@ -50,8 +50,8 @@ class UploadResource {
                     return badRequest("File size must be less than 5MB")
                 }
             }
-
-            val fileExtension = getFileExtension(file?.name())
+            val originalFilename = file?.fileName() ?: "logo.png"
+            val fileExtension = getFileExtension(originalFilename)
             val filename = "school-logo-${UUID.randomUUID()}.$fileExtension"
 
             val uploadDir = Paths.get("uploads/schools/logos")
@@ -60,7 +60,7 @@ class UploadResource {
             val filePath = uploadDir.resolve(filename)
             Files.copy(file!!.uploadedFile(), filePath)
 
-            val fileUrl = "/api/v1/uploads/schools/logos/$filename"
+            val fileUrl = "/uploads/schools/logos/$filename"
             val response = UploadResponse(fileUrl, filename, file.size())
 
             return Response.status(Response.Status.CREATED).entity(response).build()
@@ -105,7 +105,7 @@ class UploadResource {
             Files.copy(form.file!!.uploadedFile(), filePath)
 
             val fileUrl = "/api/v1/uploads/profiles/$filename"
-            val response = UploadResponse(fileUrl, filename, form.file?.size())
+            val response = UploadResponse(fileUrl, filename, form.file.size())
 
             return Response.status(Response.Status.CREATED).entity(response).build()
         } catch (e: Exception) {
@@ -116,8 +116,10 @@ class UploadResource {
     // -------------------------------
     // Helpers
     // -------------------------------
-    private fun getFileExtension(filename: String?): String? =
-        filename?.substringAfterLast('.', "")?.lowercase(Locale.getDefault())
+    private fun getFileExtension(filename: String?): String {
+        if (filename.isNullOrEmpty()) return "png" // default fallback
+        return filename.substringAfterLast('.', "").lowercase().takeIf { it.isNotEmpty() } ?: "png"
+    }
 
     private fun badRequest(message: String): Response =
         Response.status(Response.Status.BAD_REQUEST).entity(mapOf("error" to message)).build()

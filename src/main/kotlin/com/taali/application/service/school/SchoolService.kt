@@ -1,6 +1,7 @@
 package com.taali.application.service.school
 
 import com.taali.api.dto.school.*
+import com.taali.domain.enum.SchoolStatus
 import com.taali.domain.model.school.School
 import com.taali.domain.repository.school.SchoolRepository
 import com.taali.domain.repository.user.UserRepository
@@ -28,7 +29,6 @@ class SchoolService {
 
     @Transactional
     fun createSchool(request: CreateSchoolRequest, ownerId: String): SchoolDto {
-        // Check if school code already exists
         if (schoolRepository.existsByCode(request.code)) {
             throw IllegalArgumentException("School with code ${request.code} already exists")
         }
@@ -41,7 +41,9 @@ class SchoolService {
             email = request.email
             phone = request.phone
             this.ownerId = ownerId
+            status = request.status ?: SchoolStatus.ACTIVE
         }
+
         schoolRepository.persist(school)
         return school.toDto()
     }
@@ -61,6 +63,7 @@ class SchoolService {
         request.address?.let { school.address = it }
         request.email?.let { school.email = it }
         request.phone?.let { school.phone = it }
+        request.status?.let { school.status = it }
 
         schoolRepository.persist(school)
         return school.toDto()
@@ -70,13 +73,21 @@ class SchoolService {
     fun deleteSchool(id: Long): Boolean {
         val school = schoolRepository.findById(id) ?: throw NotFoundException("School with id $id not found")
 
-        // Check if school has users before deletion - FIXED: Use UserRepository
+        // Check if school has users before deletion
         val userCount = userRepository.countBySchoolId(id)
         if (userCount > 0) {
             throw IllegalStateException("Cannot delete school with existing users")
         }
 
         return schoolRepository.deleteById(id)
+    }
+
+    @Transactional
+    fun updateSchoolStatus(id: Long, status: SchoolStatus): SchoolDto {
+        val school = schoolRepository.findById(id) ?: throw NotFoundException("School with id $id not found")
+        school.status = status
+        schoolRepository.persist(school)
+        return school.toDto()
     }
 
     fun searchSchools(query: String): List<SchoolDto> {
@@ -87,12 +98,10 @@ class SchoolService {
     fun updateSchoolLogo(id: Long, imageUrl: String): SchoolDto {
         val school = schoolRepository.findById(id) ?: throw NotFoundException("School with id $id not found")
 
-        // Validate the image URL format (basic validation)
         if (imageUrl.isBlank()) {
             throw IllegalArgumentException("Image URL cannot be empty")
         }
 
-        // Optional: Add more URL validation if needed
         if (!isValidImageUrl(imageUrl)) {
             throw IllegalArgumentException("Invalid image URL format")
         }
@@ -103,13 +112,11 @@ class SchoolService {
     }
 
     private fun isValidImageUrl(url: String): Boolean {
-        // Basic URL validation - you can enhance this based on your needs
         return try {
-            // Check if it's a data URL (base64) or regular URL
             when {
-                url.startsWith("data:image/") -> true // Base64 image data
-                url.startsWith("/api/v1/uploads/schools/logos/") -> true // Our uploaded images
-                url.startsWith("http://") || url.startsWith("https://") -> true // External URLs
+                url.startsWith("data:image/") -> true
+                url.startsWith("/api/v1/uploads/schools/logos/") -> true
+                url.startsWith("http://") || url.startsWith("https://") -> true
                 else -> false
             }
         } catch (e: Exception) {
@@ -127,8 +134,13 @@ class SchoolService {
             email = email,
             phone = phone,
             ownerId = ownerId,
+            status = status,
             createdAt = createdAt,
-            updatedAt = updatedAt
+            updatedAt = updatedAt,
+            teacherCount = getTeacherCount(),
+            classCount = getClassCount(),
+            studentCount = getStudentCount(),
+            canteenCount = getCanteenCount()
         )
     }
 }

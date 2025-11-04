@@ -1,24 +1,22 @@
 package com.taali.domain.model.menu
 
+import com.taali.domain.model.common.AuditableEntity
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntity
 import jakarta.persistence.*
 import jakarta.transaction.Transactional
-import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.UpdateTimestamp
-import java.time.LocalDateTime
 
 @Entity
 @Table(
     name = "menu_items",
-    indexes = [
-        Index(name = "idx_menu_items_parent_id", columnList = "parent_id"),
-        Index(name = "idx_menu_items_order_index", columnList = "order_index"),
-        Index(name = "idx_menu_items_route", columnList = "route"),
-        Index(name = "idx_menu_items_title_key", columnList = "title_key")
-    ]
+    indexes = [Index(
+        name = "idx_menu_items_parent_id",
+        columnList = "parent_id"
+    ), Index(name = "idx_menu_items_order_index", columnList = "order_index"), Index(
+        name = "idx_menu_items_route",
+        columnList = "route"
+    ), Index(name = "idx_menu_items_title_key", columnList = "title_key")]
 )
-class MenuItem : PanacheEntity() {
+class MenuItem : AuditableEntity() {
 
     @Column(name = "title_key", nullable = false, length = 100)
     lateinit var titleKey: String
@@ -54,14 +52,6 @@ class MenuItem : PanacheEntity() {
     )
     @Column(name = "role", nullable = false, length = 50)
     var allowedRoles: MutableSet<String> = mutableSetOf()
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    lateinit var createdAt: LocalDateTime
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    lateinit var updatedAt: LocalDateTime
 
     // Business logic methods
     fun isRootItem(): Boolean = parent == null
@@ -122,9 +112,7 @@ class MenuItem : PanacheEntity() {
         }
 
         fun findMaxOrderIndex(): Int? =
-            find("SELECT COALESCE(MAX(m.orderIndex), 0) FROM MenuItem m")
-                .project(Int::class.java)
-                .firstResult()
+            find("SELECT COALESCE(MAX(m.orderIndex), 0) FROM MenuItem m").project(Int::class.java).firstResult()
 
         @Transactional
         fun createRootItem(
