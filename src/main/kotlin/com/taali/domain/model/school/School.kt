@@ -34,8 +34,8 @@ class School : AuditableEntity() {
     @Column(name = "phone", length = 20)
     var phone: String? = null
 
-    @Column(name = "owner_id", length = 100)
-    var ownerId: String? = null
+    @Column(name = "owner_id")
+    var ownerId: Long? = null
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)

@@ -12,7 +12,7 @@ data class SchoolDto(
     val address: String?,
     val email: String?,
     val phone: String?,
-    val ownerId: String?,
+    val ownerId: Long?,
     val status: SchoolStatus,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,

@@ -8,7 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped
 @ApplicationScoped
 class SchoolRepository : PanacheRepository<School> {
 
-    fun findByOwnerId(ownerId: String): List<School> {
+    fun findByOwnerId(ownerId: Long): List<School> {
         return find("ownerId", ownerId).list()
     }
 

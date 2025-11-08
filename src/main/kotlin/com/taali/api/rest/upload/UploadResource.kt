@@ -76,36 +76,36 @@ class UploadResource {
     @Path("/profile-image")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @RolesAllowed("OWNER", "ADMIN", "TEACHER", "STUDENT")
-    fun uploadProfileImage(form: FileUploadFormDto): Response {
+    fun uploadProfileImage(@RestForm("file") file: FileUpload?): Response {
         try {
             val userId = requestContext.userId ?: return Response.status(Response.Status.UNAUTHORIZED).build()
 
-            if (form.file?.size()?.toInt() == 0) {
+            if (file?.size()?.toInt() == 0) {
                 return badRequest("File is required")
             }
 
             val allowedTypes = setOf("image/jpeg", "image/png", "image/webp")
-            if (form.file?.contentType() !in allowedTypes) {
+            if (file?.contentType() !in allowedTypes) {
                 return badRequest("Only JPEG, PNG, and WebP images are allowed")
             }
 
-            form.file?.size()?.let {
+            file?.size()?.let {
                 if (it > 2 * 1024 * 1024) {
                     return badRequest("File size must be less than 2MB")
                 }
             }
-
-            val fileExtension = getFileExtension(form.file?.name())
+            val originalFilename = file?.fileName() ?: "logo.png"
+            val fileExtension = getFileExtension(originalFilename)
             val filename = "profile-$userId-${UUID.randomUUID()}.$fileExtension"
 
             val uploadDir = Paths.get("uploads/profiles")
             Files.createDirectories(uploadDir)
 
             val filePath = uploadDir.resolve(filename)
-            Files.copy(form.file!!.uploadedFile(), filePath)
+            Files.copy(file!!.uploadedFile(), filePath)
 
-            val fileUrl = "/api/v1/uploads/profiles/$filename"
-            val response = UploadResponse(fileUrl, filename, form.file.size())
+            val fileUrl = "/uploads/profiles/$filename"
+            val response = UploadResponse(fileUrl, filename, file.size())
 
             return Response.status(Response.Status.CREATED).entity(response).build()
         } catch (e: Exception) {

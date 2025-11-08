@@ -8,6 +8,7 @@ import jakarta.ws.rs.Priorities
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.ext.Provider
+import org.eclipse.microprofile.jwt.JsonWebToken
 import org.slf4j.LoggerFactory
 
 @Provider
@@ -43,15 +44,19 @@ class AuthenticationFilter : ContainerRequestFilter {
             val securityContext = containerContext.securityContext
             val principal = securityContext.userPrincipal
 
-            if (principal != null) {
+            if (principal != null && principal is JsonWebToken) {
                 logger.debug("User authenticated: ${principal.name}")
+
+                // Extract user ID from JWT claims
+                val userId = extractUserIdFromToken(principal)
 
                 // Check for roles
                 val roles = listOf("OWNER", "ADMIN", "TEACHER", "USER")
                 val userRole = roles.firstOrNull { securityContext.isUserInRole(it) }
 
-                requestContext.setUserContext(principal.name, userRole)
-                logger.debug("Set user context: ${principal.name} with role: $userRole")
+                // Use the correct method for UUID strings
+                requestContext.setUserContextFromUUID(userId, userRole)
+                logger.debug("Set user context: $userId with role: $userRole")
             } else {
                 logger.warn("No authenticated user found for path: $fullPath")
                 // Don't abort here - let Quarkus security handle it
@@ -63,6 +68,16 @@ class AuthenticationFilter : ContainerRequestFilter {
         } catch (e: Exception) {
             logger.error("Error in authentication filter", e)
             requestContext.clearUserContext()
+        }
+    }
+
+    private fun extractUserIdFromToken(token: JsonWebToken): String? {
+        return try {
+            // Simply return the UUID string from the token
+            token.getClaim<String>("userId")
+        } catch (e: Exception) {
+            logger.warn("Failed to extract user ID from token: ${e.message}")
+            null
         }
     }
 }

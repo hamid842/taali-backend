@@ -19,7 +19,7 @@ class SchoolService {
     @Inject
     lateinit var userRepository: UserRepository
 
-    fun getSchoolsByOwner(ownerId: String): List<SchoolDto> {
+    fun getSchoolsByOwner(ownerId: Long): List<SchoolDto> {
         return schoolRepository.findByOwnerId(ownerId).map { it.toDto() }
     }
 
@@ -28,7 +28,7 @@ class SchoolService {
     }
 
     @Transactional
-    fun createSchool(request: CreateSchoolRequest, ownerId: String): SchoolDto {
+    fun createSchool(request: CreateSchoolRequest, ownerId: Long): SchoolDto {
         if (schoolRepository.existsByCode(request.code)) {
             throw IllegalArgumentException("School with code ${request.code} already exists")
         }
