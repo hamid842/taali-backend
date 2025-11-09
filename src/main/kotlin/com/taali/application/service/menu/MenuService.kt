@@ -36,18 +36,27 @@ class MenuService @Inject constructor(
             UserRole.OWNER -> listOf(
                 "school:create", "school:read", "school:update", "school:delete",
                 "user:create", "user:read", "user:update", "user:delete",
-                "finance:read", "reports:generate", "system:manage",
-                "billing:manage"
+                "finance:read", "finance:tuition:read", "finance:invoice:read", "finance:reports:read",
+                "reports:generate", "system:manage", "billing:manage"
             )
 
             UserRole.ADMIN -> listOf(
                 "user:create", "user:read", "user:update", "user:delete",
-                "teacher:read", "class:read", "student:read", "parent:read",
-                "finance:read", "reports:generate"
+                "teacher:read", "teacher:create", "teacher:update", "teacher:delete",
+                "class:read", "class:create", "class:update", "class:delete",
+                "student:read", "student:create", "student:update", "student:delete",
+                "parent:read", "parent:create", "parent:update", "parent:delete",
+                "finance:read", "finance:tuition:read", "finance:invoice:read", "finance:reports:read",
+                "reports:generate"
             )
 
             UserRole.SUPERVISOR -> listOf(
-                "teacher:read", "class:read", "student:read", "parent:read",
+                "teacher:read", "teacher:create", "teacher:update", "teacher:delete",
+                "class:read", "class:create", "class:update", "class:delete",
+                "student:read", "student:create", "student:update", "student:delete",
+                "parent:read", "parent:create", "parent:update", "parent:delete",
+                "finance:read", "finance:tuition:read", "finance:invoice:read", "finance:reports:read",
+                "reports:generate",
                 "attendance:view", "calendar:view", "grades:view"
             )
 
@@ -177,44 +186,89 @@ class MenuService @Inject constructor(
         menuItemRepository.deleteAll()
 
         // ==================== OWNER MENU ====================
-        val ownerDashboard = createMenuItem("menu_dashboard", "home", "/owner/dashboard", "/owner/dashboard", 0, setOf(UserRole.OWNER))
+        val ownerDashboard = createMenuItem("menu_dashboard", "layout-dashboard", "/owner/dashboard", "/owner/dashboard", 0, setOf(UserRole.OWNER))
 
-        val ownerSchoolManagement = createMenuItem("menu_school_management", "building", null, null, 1, setOf(UserRole.OWNER))
+        val ownerSchoolManagement = createMenuItem("menu_school_management", "school", null, null, 1, setOf(UserRole.OWNER))
         createMenuItem("menu_create_school", "plus", "/owner/schools/create", "/owner/schools/create", 0, setOf(UserRole.OWNER), ownerSchoolManagement, "school:create")
         createMenuItem("menu_list_schools", "list", "/owner/schools", "/owner/schools", 1, setOf(UserRole.OWNER), ownerSchoolManagement, "school:read")
 
-        val ownerUserManagement = createMenuItem("menu_user_management", "users", null, null, 2, setOf(UserRole.OWNER))
+        val ownerUserManagement = createMenuItem("menu_user_management", "users-round", null, null, 2, setOf(UserRole.OWNER))
         createMenuItem("menu_create_user", "user-plus", "/owner/users/create", "/owner/users/create", 0, setOf(UserRole.OWNER), ownerUserManagement, "user:create")
         createMenuItem("menu_list_users", "users", "/owner/users", "/owner/users", 1, setOf(UserRole.OWNER), ownerUserManagement, "user:read")
 
         val ownerFinance = createMenuItem("menu_finance", "dollar-sign", null, null, 3, setOf(UserRole.OWNER))
         createMenuItem("menu_billing", "credit-card", "/owner/billing", "/owner/billing", 0, setOf(UserRole.OWNER), ownerFinance, "billing:manage")
-        createMenuItem("menu_financial_reports", "bar-chart", "/owner/financial-reports", "/owner/financial-reports", 1, setOf(UserRole.OWNER), ownerFinance, "reports:generate")
+        createMenuItem("menu_financial_reports", "chart-bar", "/owner/financial-reports", "/owner/financial-reports", 1, setOf(UserRole.OWNER), ownerFinance, "reports:generate")
 
         // ==================== ADMIN MENU ====================
-        val adminDashboard = createMenuItem("menu_dashboard", "home", "/admin/dashboard", "/admin/dashboard", 0, setOf(UserRole.ADMIN))
+        val adminDashboard = createMenuItem("menu_dashboard", "layout-dashboard", "/admin/dashboard", "/admin/dashboard", 0, setOf(UserRole.ADMIN))
 
-        val adminUserManagement = createMenuItem("menu_user_management", "users", null, null, 1, setOf(UserRole.ADMIN))
+        val adminUserManagement = createMenuItem("menu_user_management", "users-round", null, null, 1, setOf(UserRole.ADMIN))
         createMenuItem("menu_create_user", "user-plus", "/admin/users/create", "/admin/users/create", 0, setOf(UserRole.ADMIN), adminUserManagement, "user:create")
         createMenuItem("menu_list_users", "users", "/admin/users", "/admin/users", 1, setOf(UserRole.ADMIN), adminUserManagement, "user:read")
 
-        createMenuItem("menu_teacher_management", "user-check", "/admin/teachers", "/admin/teachers", 2, setOf(UserRole.ADMIN), requiredPermission = "teacher:read")
-        createMenuItem("menu_class_management", "users", "/admin/classes", "/admin/classes", 3, setOf(UserRole.ADMIN), requiredPermission = "class:read")
-        createMenuItem("menu_student_management", "graduation-cap", "/admin/students", "/admin/students", 4, setOf(UserRole.ADMIN), requiredPermission = "student:read")
-        createMenuItem("menu_parent_management", "user", "/admin/parents", "/admin/parents", 5, setOf(UserRole.ADMIN), requiredPermission = "parent:read")
-        createMenuItem("menu_finance", "dollar-sign", "/admin/finance", "/admin/finance", 6, setOf(UserRole.ADMIN), requiredPermission = "finance:read")
+        // Teacher Management with children
+        val adminTeacherManagement = createMenuItem("menu_teacher_management", "contact", null, null, 2, setOf(UserRole.ADMIN))
+        createMenuItem("menu_list_teachers", "list", "/admin/teachers", "/admin/teachers", 0, setOf(UserRole.ADMIN), adminTeacherManagement, "teacher:read")
+        createMenuItem("menu_create_teacher", "user-round-plus", "/admin/teachers/create", "/admin/teachers/create", 1, setOf(UserRole.ADMIN), adminTeacherManagement, "teacher:create")
+
+        // Class Management with children
+        val adminClassManagement = createMenuItem("menu_class_management", "grid-2x2", null, null, 3, setOf(UserRole.ADMIN))
+        createMenuItem("menu_list_classes", "list", "/admin/classes", "/admin/classes", 0, setOf(UserRole.ADMIN), adminClassManagement, "class:read")
+        createMenuItem("menu_create_class", "grid-2x2-plus", "/admin/classes/create", "/admin/classes/create", 1, setOf(UserRole.ADMIN), adminClassManagement, "class:create")
+
+        // Student Management with children
+        val adminStudentManagement = createMenuItem("menu_student_management", "graduation-cap", null, null, 4, setOf(UserRole.ADMIN))
+        createMenuItem("menu_list_students", "list", "/admin/students", "/admin/students", 0, setOf(UserRole.ADMIN), adminStudentManagement, "student:read")
+        createMenuItem("menu_create_student", "user-plus", "/admin/students/create", "/admin/students/create", 1, setOf(UserRole.ADMIN), adminStudentManagement, "student:create")
+
+        // Parent Management with children
+        val adminParentManagement = createMenuItem("menu_parent_management", "file-user", null, null, 5, setOf(UserRole.ADMIN))
+        createMenuItem("menu_list_parents", "list", "/admin/parents", "/admin/parents", 0, setOf(UserRole.ADMIN), adminParentManagement, "parent:read")
+        createMenuItem("menu_create_parent", "user-plus", "/admin/parents/create", "/admin/parents/create", 1, setOf(UserRole.ADMIN), adminParentManagement, "parent:create")
+
+        // Finance with children
+        val adminFinance = createMenuItem("menu_finance", "dollar-sign", null, null, 6, setOf(UserRole.ADMIN))
+        createMenuItem("menu_finance_tuition", "credit-card", "/admin/finance/tuition", "/admin/finance/tuition", 0, setOf(UserRole.ADMIN), adminFinance, "finance:tuition:read")
+        createMenuItem("menu_finance_invoice", "file-text", "/admin/finance/invoice", "/admin/finance/invoice", 1, setOf(UserRole.ADMIN), adminFinance, "finance:invoice:read")
+        createMenuItem("menu_finance_reports", "chart-bar", "/admin/finance/reports", "/admin/finance/reports", 2, setOf(UserRole.ADMIN), adminFinance, "finance:reports:read")
 
         // ==================== SUPERVISOR MENU ====================
-        createMenuItem("menu_dashboard", "home", "/supervisor/dashboard", "/supervisor/dashboard", 0, setOf(UserRole.SUPERVISOR))
-        createMenuItem("menu_teacher_management", "user-check", "/supervisor/teachers", "/supervisor/teachers", 1, setOf(UserRole.SUPERVISOR), requiredPermission = "teacher:read")
-        createMenuItem("menu_class_management", "users", "/supervisor/classes", "/supervisor/classes", 2, setOf(UserRole.SUPERVISOR), requiredPermission = "class:read")
-        createMenuItem("menu_student_management", "graduation-cap", "/supervisor/students", "/supervisor/students", 3, setOf(UserRole.SUPERVISOR), requiredPermission = "student:read")
-        createMenuItem("menu_parent_management", "user", "/supervisor/parents", "/supervisor/parents", 4, setOf(UserRole.SUPERVISOR), requiredPermission = "parent:read")
-        createMenuItem("menu_attendance_reports", "clipboard-check", "/supervisor/attendance", "/supervisor/attendance", 5, setOf(UserRole.SUPERVISOR), requiredPermission = "attendance:view")
-        createMenuItem("menu_academic_calendar", "calendar", "/supervisor/calendar", "/supervisor/calendar", 6, setOf(UserRole.SUPERVISOR), requiredPermission = "calendar:view")
+        // Supervisor has same access as ADMIN but without user management
+        val supervisorDashboard = createMenuItem("menu_dashboard", "layout-dashboard", "/supervisor/dashboard", "/supervisor/dashboard", 0, setOf(UserRole.SUPERVISOR))
+
+        // Teacher Management with children (same as ADMIN)
+        val supervisorTeacherManagement = createMenuItem("menu_teacher_management", "contact", null, null, 1, setOf(UserRole.SUPERVISOR))
+        createMenuItem("menu_list_teachers", "list", "/supervisor/teachers", "/supervisor/teachers", 0, setOf(UserRole.SUPERVISOR), supervisorTeacherManagement, "teacher:read")
+        createMenuItem("menu_create_teacher", "user-round-plus", "/supervisor/teachers/create", "/supervisor/teachers/create", 1, setOf(UserRole.SUPERVISOR), supervisorTeacherManagement, "teacher:create")
+
+        // Class Management with children (same as ADMIN)
+        val supervisorClassManagement = createMenuItem("menu_class_management", "grid-2x2", null, null, 2, setOf(UserRole.SUPERVISOR))
+        createMenuItem("menu_list_classes", "list", "/supervisor/classes", "/supervisor/classes", 0, setOf(UserRole.SUPERVISOR), supervisorClassManagement, "class:read")
+        createMenuItem("menu_create_class", "grid-2x2-plus", "/supervisor/classes/create", "/supervisor/classes/create", 1, setOf(UserRole.SUPERVISOR), supervisorClassManagement, "class:create")
+
+        // Student Management with children (same as ADMIN)
+        val supervisorStudentManagement = createMenuItem("menu_student_management", "graduation-cap", null, null, 3, setOf(UserRole.SUPERVISOR))
+        createMenuItem("menu_list_students", "list", "/supervisor/students", "/supervisor/students", 0, setOf(UserRole.SUPERVISOR), supervisorStudentManagement, "student:read")
+        createMenuItem("menu_create_student", "user-plus", "/supervisor/students/create", "/supervisor/students/create", 1, setOf(UserRole.SUPERVISOR), supervisorStudentManagement, "student:create")
+
+        // Parent Management with children (same as ADMIN)
+        val supervisorParentManagement = createMenuItem("menu_parent_management", "user", null, null, 4, setOf(UserRole.SUPERVISOR))
+        createMenuItem("menu_list_parents", "list", "/supervisor/parents", "/supervisor/parents", 0, setOf(UserRole.SUPERVISOR), supervisorParentManagement, "parent:read")
+        createMenuItem("menu_create_parent", "user-plus", "/supervisor/parents/create", "/supervisor/parents/create", 1, setOf(UserRole.SUPERVISOR), supervisorParentManagement, "parent:create")
+
+        // Finance with children (same as ADMIN)
+        val supervisorFinance = createMenuItem("menu_finance", "dollar-sign", null, null, 5, setOf(UserRole.SUPERVISOR))
+        createMenuItem("menu_finance_tuition", "credit-card", "/supervisor/finance/tuition", "/supervisor/finance/tuition", 0, setOf(UserRole.SUPERVISOR), supervisorFinance, "finance:tuition:read")
+        createMenuItem("menu_finance_invoice", "file-text", "/supervisor/finance/invoice", "/supervisor/finance/invoice", 1, setOf(UserRole.SUPERVISOR), supervisorFinance, "finance:invoice:read")
+        createMenuItem("menu_finance_reports", "chart-bar", "/supervisor/finance/reports", "/supervisor/finance/reports", 2, setOf(UserRole.SUPERVISOR), supervisorFinance, "finance:reports:read")
+
+        // Additional supervisor-specific menus
+        createMenuItem("menu_attendance_reports", "clipboard-check", "/supervisor/attendance", "/supervisor/attendance", 6, setOf(UserRole.SUPERVISOR), requiredPermission = "attendance:view")
+        createMenuItem("menu_academic_calendar", "calendar", "/supervisor/calendar", "/supervisor/calendar", 7, setOf(UserRole.SUPERVISOR), requiredPermission = "calendar:view")
 
         // ==================== TEACHER MENU ====================
-        createMenuItem("menu_dashboard", "home", "/teacher/dashboard", "/teacher/dashboard", 0, setOf(UserRole.TEACHER))
+        createMenuItem("menu_dashboard", "layout-dashboard", "/teacher/dashboard", "/teacher/dashboard", 0, setOf(UserRole.TEACHER))
         createMenuItem("menu_my_classes", "book-open", "/teacher/my-classes", "/teacher/my-classes", 1, setOf(UserRole.TEACHER), requiredPermission = "class:read")
         createMenuItem("menu_my_students", "users", "/teacher/my-students", "/teacher/my-students", 2, setOf(UserRole.TEACHER), requiredPermission = "student:read")
         createMenuItem("menu_attendance", "clipboard-check", "/teacher/attendance", "/teacher/attendance", 3, setOf(UserRole.TEACHER), requiredPermission = "attendance:manage")
@@ -223,7 +277,7 @@ class MenuService @Inject constructor(
         createMenuItem("menu_lesson_plans", "book", "/teacher/lesson-plans", "/teacher/lesson-plans", 6, setOf(UserRole.TEACHER), requiredPermission = "lesson_plans:manage")
 
         // ==================== STUDENT MENU ====================
-        createMenuItem("menu_dashboard", "home", "/student/dashboard", "/student/dashboard", 0, setOf(UserRole.STUDENT))
+        createMenuItem("menu_dashboard", "layout-dashboard", "/student/dashboard", "/student/dashboard", 0, setOf(UserRole.STUDENT))
         createMenuItem("menu_my_profile", "user", "/student/profile", "/student/profile", 1, setOf(UserRole.STUDENT), requiredPermission = "profile:read")
         createMenuItem("menu_my_classes", "book-open", "/student/my-classes", "/student/my-classes", 2, setOf(UserRole.STUDENT), requiredPermission = "classes:read")
         createMenuItem("menu_my_grades", "award", "/student/grades", "/student/grades", 3, setOf(UserRole.STUDENT), requiredPermission = "grades:read")
@@ -232,7 +286,7 @@ class MenuService @Inject constructor(
         createMenuItem("menu_schedule", "calendar", "/student/schedule", "/student/schedule", 6, setOf(UserRole.STUDENT), requiredPermission = "schedule:view")
 
         // ==================== PARENT MENU ====================
-        createMenuItem("menu_dashboard", "home", "/parent/dashboard", "/parent/dashboard", 0, setOf(UserRole.PARENT))
+        createMenuItem("menu_dashboard", "layout-dashboard", "/parent/dashboard", "/parent/dashboard", 0, setOf(UserRole.PARENT))
         createMenuItem("menu_my_children", "users", "/parent/my-children", "/parent/my-children", 1, setOf(UserRole.PARENT), requiredPermission = "children:read")
         createMenuItem("menu_children_grades", "award", "/parent/children-grades", "/parent/children-grades", 2, setOf(UserRole.PARENT), requiredPermission = "children_grades:read")
         createMenuItem("menu_children_attendance", "clipboard-check", "/parent/children-attendance", "/parent/children-attendance", 3, setOf(UserRole.PARENT), requiredPermission = "children_attendance:read")
@@ -240,7 +294,7 @@ class MenuService @Inject constructor(
         createMenuItem("menu_notifications", "bell", "/parent/notifications", "/parent/notifications", 5, setOf(UserRole.PARENT), requiredPermission = "notifications:receive")
 
         // ==================== FINANCE TEAM MENU ====================
-        createMenuItem("menu_dashboard", "home", "/finance/dashboard", "/finance/dashboard", 0, setOf(UserRole.FINANCE_TEAM))
+        createMenuItem("menu_dashboard", "layout-dashboard", "/finance/dashboard", "/finance/dashboard", 0, setOf(UserRole.FINANCE_TEAM))
         createMenuItem("menu_fee_management", "credit-card", "/finance/fees", "/finance/fees", 1, setOf(UserRole.FINANCE_TEAM), requiredPermission = "payments:manage")
         createMenuItem("menu_payment_tracking", "dollar-sign", "/finance/payments", "/finance/payments", 2, setOf(UserRole.FINANCE_TEAM), requiredPermission = "payments:manage")
         createMenuItem("menu_invoices", "file-text", "/finance/invoices", "/finance/invoices", 3, setOf(UserRole.FINANCE_TEAM), requiredPermission = "invoices:read")
@@ -248,7 +302,7 @@ class MenuService @Inject constructor(
         createMenuItem("menu_expense_management", "trending-down", "/finance/expenses", "/finance/expenses", 5, setOf(UserRole.FINANCE_TEAM), requiredPermission = "expenses:manage")
 
         // ==================== CANTEEN OPERATOR MENU ====================
-        createMenuItem("menu_dashboard", "home", "/canteen/dashboard", "/canteen/dashboard", 0, setOf(UserRole.CANTEEN_OPERATOR))
+        createMenuItem("menu_dashboard", "layout-dashboard", "/canteen/dashboard", "/canteen/dashboard", 0, setOf(UserRole.CANTEEN_OPERATOR))
         createMenuItem("menu_food_menu", "utensils", "/canteen/food-menu", "/canteen/food-menu", 1, setOf(UserRole.CANTEEN_OPERATOR), requiredPermission = "menu:read")
         createMenuItem("menu_orders", "shopping-cart", "/canteen/orders", "/canteen/orders", 2, setOf(UserRole.CANTEEN_OPERATOR), requiredPermission = "orders:manage")
         createMenuItem("menu_inventory", "package", "/canteen/inventory", "/canteen/inventory", 3, setOf(UserRole.CANTEEN_OPERATOR), requiredPermission = "inventory:manage")

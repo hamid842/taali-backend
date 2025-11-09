@@ -15,13 +15,14 @@ class Canteen : AuditableEntity() {
     @Column(name = "location")
     var location: String? = null
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "school_id", nullable = false)
-    var school: School? = null
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "operator_id", unique = true)
     var operator: User? = null
 
-    companion object : PanacheCompanion<Canteen>
+    companion object : PanacheCompanion<Canteen> {
+        fun findBySchool(schoolId: Long): List<Canteen> {
+            return find("school.id", schoolId).list()
+        }
+    }
 }

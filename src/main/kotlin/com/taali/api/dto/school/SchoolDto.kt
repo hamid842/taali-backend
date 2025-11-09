@@ -19,7 +19,6 @@ data class SchoolDto(
     val teacherCount: Long = 0,
     val classCount: Long = 0,
     val studentCount: Long = 0,
-    val canteenCount: Long = 0
 )
 
 data class CreateSchoolRequest(

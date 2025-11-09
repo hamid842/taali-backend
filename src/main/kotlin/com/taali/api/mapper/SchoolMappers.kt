@@ -16,9 +16,5 @@ fun School.toDto(): SchoolDto {
         status = this.status,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
-        teacherCount = this.teachers.size.toLong(),
-        classCount = this.classes.size.toLong(),
-        studentCount = this.students.size.toLong(),
-        canteenCount = this.canteens.size.toLong()
     )
 }

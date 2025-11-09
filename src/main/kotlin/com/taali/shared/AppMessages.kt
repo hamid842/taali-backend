@@ -132,6 +132,40 @@ interface AppMessages {
     @Message("Payment Tracking")
     fun menu_payment_tracking(): String
 
+    // NEW: Added for the nested menu structure
+    @Message("List Teachers")
+    fun menu_list_teachers(): String
+
+    @Message("Create Teacher")
+    fun menu_create_teacher(): String
+
+    @Message("List Classes")
+    fun menu_list_classes(): String
+
+    @Message("Create Class")
+    fun menu_create_class(): String
+
+    @Message("List Students")
+    fun menu_list_students(): String
+
+    @Message("Create Student")
+    fun menu_create_student(): String
+
+    @Message("List Parents")
+    fun menu_list_parents(): String
+
+    @Message("Create Parent")
+    fun menu_create_parent(): String
+
+    @Message("Tuition")
+    fun menu_finance_tuition(): String
+
+    @Message("Invoice")
+    fun menu_finance_invoice(): String
+
+    @Message("Reports")
+    fun menu_finance_reports(): String
+
     // Validation Messages
     @Message("First name is required")
     fun validation_first_name_required(): String

@@ -137,10 +137,9 @@ class SchoolService {
             status = status,
             createdAt = createdAt,
             updatedAt = updatedAt,
-            teacherCount = getTeacherCount(),
-            classCount = getClassCount(),
-            studentCount = getStudentCount(),
-            canteenCount = getCanteenCount()
+            teacherCount = teacherCount,
+            classCount = classCount,
+            studentCount = studentCount,
         )
     }
 }

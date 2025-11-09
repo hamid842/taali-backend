@@ -15,12 +15,6 @@ class Student : AuditableEntity() {
     @JoinColumn(name = "user_id", unique = true)
     var user: User? = null
 
-    @Column(name = "first_name", nullable = false)
-    var firstName: String = ""
-
-    @Column(name = "last_name", nullable = false)
-    var lastName: String = ""
-
     @Column(name = "student_id", unique = true)
     var studentId: String? = null
 
@@ -34,24 +28,17 @@ class Student : AuditableEntity() {
     @Column(name = "gender")
     var gender: Gender? = null
 
-    // School relationship
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "school_id")
-    var school: School? = null
+    @Column(name = "is_active")
+    var isActive: Boolean = true
 
     // Class relationship
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id")
     var schoolClass: SchoolClass? = null
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "student_parents",
-        joinColumns = [JoinColumn(name = "student_id")],
-        inverseJoinColumns = [JoinColumn(name = "parent_id")]
-    )
+    // This should match the Parent entity's students relationship
+    @ManyToMany(mappedBy = "students", fetch = FetchType.LAZY)
     var parents: MutableSet<Parent> = mutableSetOf()
-
 
     @Column(name = "emergency_contact")
     var emergencyContact: String? = null
@@ -62,8 +49,12 @@ class Student : AuditableEntity() {
     @Column(name = "medical_notes", columnDefinition = "TEXT")
     var medicalNotes: String? = null
 
-    // Helper method to get full name
-    fun getFullName(): String = "$firstName $lastName"
+    // Add grade level
+    @Column(name = "grade_level")
+    var gradeLevel: String? = null
+
+    // Helper method to get full name from User
+    fun getFullName(): String = user?.let { "${it.firstName} ${it.lastName}" } ?: ""
 
     // Helper method to calculate age
     fun getAge(): Int? = birthDate?.let {
@@ -73,5 +64,13 @@ class Student : AuditableEntity() {
         age
     }
 
-    companion object : PanacheCompanion<Student>
+    companion object : PanacheCompanion<Student> {
+        fun findBySchool(schoolId: Long): List<Student> {
+            return find("school.id", schoolId).list()
+        }
+
+        fun findByUser(userId: Long): Student? {
+            return find("user.id", userId).firstResult()
+        }
+    }
 }

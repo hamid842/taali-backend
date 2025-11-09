@@ -1,7 +1,10 @@
 package com.taali.domain.model.school
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.taali.domain.enum.SchoolStatus
 import com.taali.domain.model.common.AuditableEntity
+import com.taali.domain.model.menu.MenuItem
+import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
 import jakarta.persistence.*
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
@@ -41,27 +44,36 @@ class School : AuditableEntity() {
     @Column(name = "status", nullable = false, length = 20)
     var status: SchoolStatus = SchoolStatus.ACTIVE
 
-    // Relationships
-    @OneToMany(mappedBy = "school", fetch = FetchType.LAZY, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
-    var teachers: MutableSet<Teacher> = mutableSetOf()
-
-    @OneToMany(mappedBy = "school", fetch = FetchType.LAZY, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
-    var classes: MutableSet<SchoolClass> = mutableSetOf()
-
-    @OneToMany(mappedBy = "school", fetch = FetchType.LAZY, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
-    var students: MutableSet<Student> = mutableSetOf()
-
-    @OneToMany(mappedBy = "school", fetch = FetchType.LAZY, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
-    var canteens: MutableSet<Canteen> = mutableSetOf()
 
     // Helper methods to get counts without loading entire collections
-    fun getTeacherCount(): Long = Teacher.count("school", this)
-    fun getClassCount(): Long = SchoolClass.count("school", this)
-    fun getStudentCount(): Long = Student.count("school", this)
-    fun getCanteenCount(): Long = Canteen.count("school", this)
+    @get:Transient
+    @get:JsonIgnore
+    val teacherCount: Long
+        get() = Teacher.count("user.school", this)
+
+    @get:Transient
+    @get:JsonIgnore
+    val classCount: Long
+        get() = SchoolClass.count("school", this)
+
+    @get:Transient
+    @get:JsonIgnore
+    val studentCount: Long
+        get() = Student.count("user.school", this)
+
 
     override fun toString(): String =
         "School(id=$id, name='$name', code='$code', status=$status)"
+
+    companion object : PanacheCompanion<School> {
+        fun findActive(): List<School> {
+            return find("isActive", true).list()
+        }
+
+        fun findByCode(code: String): School? {
+            return find("code", code).firstResult()
+        }
+    }
 
 }
 

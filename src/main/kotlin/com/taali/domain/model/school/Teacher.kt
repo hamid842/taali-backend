@@ -13,28 +13,43 @@ class Teacher : AuditableEntity() {
     @JoinColumn(name = "user_id", unique = true)
     var user: User? = null
 
-    @Column(name = "first_name", nullable = false)
-    var firstName: String = ""
+    @Column(name = "is_active")
+    var isActive: Boolean = true
 
-    @Column(name = "last_name", nullable = false)
-    var lastName: String = ""
-
-    @Column(name = "email")
-    var email: String? = null
-
-    @Column(name = "phone")
-    var phone: String? = null
-
-    @Column(name = "subject_specialization")
-    var specialization: String? = null
+    @ElementCollection
+    @CollectionTable(name = "teacher_specializations", joinColumns = [JoinColumn(name = "teacher_id")])
+    @Column(name = "specialization")
+    var specializations: MutableSet<String> = mutableSetOf()
 
     @Column(name = "qualification")
     var qualification: String? = null
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "school_id")
-    var school: School? = null
+    @Column(name = "experience_years")
+    var experienceYears: Int? = null
 
-    companion object : PanacheCompanion<Teacher>
+    @Column(name = "hire_date")
+    var hireDate: java.time.LocalDate? = null
 
+    @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)
+    var classAssignments: MutableSet<ClassTeacher> = mutableSetOf()
+
+    companion object : PanacheCompanion<Teacher> {
+        fun findBySchool(schoolId: Long): List<Teacher> {
+            return find("user.school.id", schoolId).list()
+        }
+
+        fun findByUser(userId: Long): Teacher? {
+            return find("user.id", userId).firstResult()
+        }
+    }
+
+
+    // Helper method to get full name from User
+    fun getFullName(): String = user?.let { "${it.firstName} ${it.lastName}" } ?: ""
+
+    // Helper method to get email from User
+    fun getEmail(): String? = user?.email
+
+    // Helper method to get phone from User
+    fun getPhone(): String? = user?.phoneNumber
 }

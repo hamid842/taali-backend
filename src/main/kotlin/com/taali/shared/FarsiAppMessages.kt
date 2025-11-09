@@ -132,6 +132,40 @@ interface FarsiAppMessages : AppMessages {
     @Message("پیگیری پرداخت")
     override fun menu_payment_tracking(): String
 
+    // NEW: Added Farsi translations for nested menu structure
+    @Message("لیست معلمان")
+    override fun menu_list_teachers(): String
+
+    @Message("ایجاد معلم")
+    override fun menu_create_teacher(): String
+
+    @Message("لیست کلاس‌ها")
+    override fun menu_list_classes(): String
+
+    @Message("ایجاد کلاس")
+    override fun menu_create_class(): String
+
+    @Message("لیست دانش‌آموزان")
+    override fun menu_list_students(): String
+
+    @Message("ایجاد دانش‌آموز")
+    override fun menu_create_student(): String
+
+    @Message("لیست اولیا")
+    override fun menu_list_parents(): String
+
+    @Message("ایجاد ولی")
+    override fun menu_create_parent(): String
+
+    @Message("شهریه")
+    override fun menu_finance_tuition(): String
+
+    @Message("فاکتور")
+    override fun menu_finance_invoice(): String
+
+    @Message("گزارشات")
+    override fun menu_finance_reports(): String
+
     // Validation Messages
     @Message("نام الزامی است")
     override fun validation_first_name_required(): String

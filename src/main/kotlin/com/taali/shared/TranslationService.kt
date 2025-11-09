@@ -83,8 +83,6 @@ class TranslationService {
                 "menu_financial_reports" -> localizedMessages.menu_financial_reports()
                 "menu_payment_management" -> localizedMessages.menu_payment_management()
                 "menu_invoices" -> localizedMessages.menu_invoices()
-
-                // NEW MENU ITEMS - Added the missing menu items
                 "menu_billing" -> localizedMessages.menu_billing()
                 "menu_fee_management" -> localizedMessages.menu_fee_management()
                 "menu_expense_management" -> localizedMessages.menu_expense_management()
@@ -98,6 +96,17 @@ class TranslationService {
                 "menu_academic_calendar" -> localizedMessages.menu_academic_calendar()
                 "menu_sales_reports" -> localizedMessages.menu_sales_reports()
                 "menu_payment_tracking" -> localizedMessages.menu_payment_tracking()
+                "menu_list_teachers" -> localizedMessages.menu_list_teachers()
+                "menu_create_teacher" -> localizedMessages.menu_create_teacher()
+                "menu_list_classes" -> localizedMessages.menu_list_classes()
+                "menu_create_class" -> localizedMessages.menu_create_class()
+                "menu_list_students" -> localizedMessages.menu_list_students()
+                "menu_create_student" -> localizedMessages.menu_create_student()
+                "menu_list_parents" -> localizedMessages.menu_list_parents()
+                "menu_create_parent" -> localizedMessages.menu_create_parent()
+                "menu_finance_tuition" -> localizedMessages.menu_finance_tuition()
+                "menu_finance_invoice" -> localizedMessages.menu_finance_invoice()
+                "menu_finance_reports" -> localizedMessages.menu_finance_reports()
 
                 // Validation keys - updated to snake_case
                 "validation_first_name_required" -> localizedMessages.validation_first_name_required()
