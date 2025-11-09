@@ -36,8 +36,12 @@ class Student : AuditableEntity() {
     @JoinColumn(name = "class_id")
     var schoolClass: SchoolClass? = null
 
-    // This should match the Parent entity's students relationship
-    @ManyToMany(mappedBy = "students", fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "student_parents",
+        joinColumns = [JoinColumn(name = "student_id")],
+        inverseJoinColumns = [JoinColumn(name = "parent_id")]
+    )
     var parents: MutableSet<Parent> = mutableSetOf()
 
     @Column(name = "emergency_contact")
@@ -66,7 +70,7 @@ class Student : AuditableEntity() {
 
     companion object : PanacheCompanion<Student> {
         fun findBySchool(schoolId: Long): List<Student> {
-            return find("school.id", schoolId).list()
+            return find("user.school.id", schoolId).list()
         }
 
         fun findByUser(userId: Long): Student? {
