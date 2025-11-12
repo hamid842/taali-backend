@@ -6,6 +6,7 @@ import com.taali.domain.model.user.User
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
 import jakarta.persistence.*
 import java.time.LocalDate
+import java.util.UUID
 
 @Entity
 @Table(name = "students")

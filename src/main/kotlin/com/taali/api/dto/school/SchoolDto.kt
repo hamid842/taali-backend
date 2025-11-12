@@ -27,7 +27,7 @@ data class CreateSchoolRequest(
 
     @field:NotBlank(message = "Code is required")
     val code: String,
-
+    val ownerId: Long,
     val image: String? = null,
     val phone: String? = null,
     val email: String? = null,

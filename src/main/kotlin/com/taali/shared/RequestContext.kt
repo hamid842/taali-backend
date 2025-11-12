@@ -1,6 +1,9 @@
 package com.taali.shared
 
+import com.taali.domain.model.user.User
+import com.taali.domain.repository.user.UserRepository
 import jakarta.enterprise.context.RequestScoped
+import jakarta.inject.Inject
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.core.UriInfo
 import org.slf4j.LoggerFactory
@@ -10,6 +13,9 @@ import java.util.*
 class RequestContext {
 
     private val logger = LoggerFactory.getLogger(RequestContext::class.java)
+
+    @Inject
+    lateinit var userRepository: UserRepository
 
     var language: String = "en"
         private set
@@ -43,22 +49,12 @@ class RequestContext {
         }
     }
 
-    // Keep existing method for Long IDs
-    fun setUserContext(userId: Long?, userRole: String?) {
-        this.userId = userId
-        this.userRole = userRole
-        logger.debug("Set user context - userId: $userId, userRole: $userRole")
-    }
-
-    // Add new method for UUID strings
     fun setUserContextFromUUID(userUUID: String?, userRole: String?) {
         this.userUUID = userUUID
         this.userRole = userRole
-
-        // You'll need to look up the numeric ID from database
         this.userId = lookupNumericUserId(userUUID)
 
-        logger.debug("Set user context - userUUID: $userUUID, numericUserId: $userId, userRole: $userRole")
+        logger.info("Authenticated userId in RequestContext: $userId, userUUID: $userUUID, role: $userRole")
     }
 
     fun clearUserContext() {
@@ -67,17 +63,16 @@ class RequestContext {
         userRole = null
     }
 
-    fun isAuthenticated(): Boolean = userId != null || userUUID != null
-
-    fun isSecure(): Boolean =
-        uriInfo?.requestUri?.scheme.equals("https", ignoreCase = true)
-
     private fun lookupNumericUserId(uuid: String?): Long? {
         if (uuid == null) return null
 
-        // TODO: Implement database lookup to convert UUID to numeric ID
-        // For now, return a temporary value (hash of UUID)
-        logger.warn("Using temporary UUID to numeric ID mapping for: $uuid")
-        return uuid.hashCode().toLong()
+        // ✅ Correct query: field name is "userId", not "uuid"
+        val user = User.find("userId", UUID.fromString(uuid)).firstResult()
+        if (user != null) {
+            return user.id
+        }
+
+        logger.warn("User with UUID $uuid not found in database")
+        return null
     }
 }

@@ -4,5 +4,5 @@ data class StudentSummary(
     val id: Long,
     val firstName: String,
     val lastName: String,
-    val studentCode: String?
+    val studentId: String?
 )

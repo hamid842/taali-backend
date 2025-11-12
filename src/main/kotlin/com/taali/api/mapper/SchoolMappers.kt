@@ -12,9 +12,9 @@ fun School.toDto(): SchoolDto {
         address = this.address,
         email = this.email,
         phone = this.phone,
-        ownerId = this.ownerId,
         status = this.status,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
+        ownerId = this.owner?.id,
     )
 }

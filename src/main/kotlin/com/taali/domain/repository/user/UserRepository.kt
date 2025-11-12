@@ -44,8 +44,8 @@ class UserRepository : PanacheRepository<User> {
         return count("phoneNumber", phoneNumber) > 0
     }
 
-    fun findById(id: UUID): User? {
-        return find("id", id).firstResult()
+    fun findById(id: Long?): User? {
+        return find("id", id.toString()).firstResult()
     }
 
     // Add the missing findByUserId method

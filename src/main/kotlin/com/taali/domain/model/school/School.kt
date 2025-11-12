@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.taali.domain.enum.SchoolStatus
 import com.taali.domain.model.common.AuditableEntity
 import com.taali.domain.model.menu.MenuItem
+import com.taali.domain.model.user.User
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
 import jakarta.persistence.*
 import jakarta.validation.constraints.Email
@@ -37,8 +38,9 @@ class School : AuditableEntity() {
     @Column(name = "phone", length = 20)
     var phone: String? = null
 
-    @Column(name = "owner_id")
-    var ownerId: Long? = null
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    var owner: User? = null
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)

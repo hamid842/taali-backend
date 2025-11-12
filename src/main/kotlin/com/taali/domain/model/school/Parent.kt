@@ -36,8 +36,12 @@ class Parent : AuditableEntity() {
             return find("school.id", schoolId).list()
         }
 
-        fun findByUser(userId: Long): Parent? {
+        fun findByUser(userId: String): Parent? {
             return find("user.id", userId).firstResult()
+        }
+
+        fun findByEmail(email: String): Parent? {
+            return find("user.email", email).firstResult()
         }
     }
 

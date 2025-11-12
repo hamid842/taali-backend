@@ -1,6 +1,7 @@
 package com.taali.application.service.school
 
 import com.taali.api.dto.school.*
+import com.taali.application.service.user.UserService
 import com.taali.domain.enum.SchoolStatus
 import com.taali.domain.model.school.School
 import com.taali.domain.repository.school.SchoolRepository
@@ -9,10 +10,11 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
 
 @ApplicationScoped
 class SchoolService {
-
+    private val logger = LoggerFactory.getLogger(UserService::class.java)
     @Inject
     lateinit var schoolRepository: SchoolRepository
 
@@ -20,7 +22,10 @@ class SchoolService {
     lateinit var userRepository: UserRepository
 
     fun getSchoolsByOwner(ownerId: Long): List<SchoolDto> {
-        return schoolRepository.findByOwnerId(ownerId).map { it.toDto() }
+        logger.info("Fetching schools for ownerId: $ownerId")
+        val schools = schoolRepository.findByOwnerId(ownerId)
+        logger.info("Found ${schools.size} schools for ownerId: $ownerId")
+        return schools.map { it.toDto() }
     }
 
     fun getSchoolById(id: Long): SchoolDto? {
@@ -32,6 +37,9 @@ class SchoolService {
         if (schoolRepository.existsByCode(request.code)) {
             throw IllegalArgumentException("School with code ${request.code} already exists")
         }
+        val ownerId = request.ownerId
+        val owner = userRepository.findById(ownerId)
+            ?: throw IllegalArgumentException("User with id $ownerId not found")
 
         val school = School().apply {
             name = request.name
@@ -40,7 +48,7 @@ class SchoolService {
             address = request.address
             email = request.email
             phone = request.phone
-            this.ownerId = ownerId
+            this.owner = owner
             status = request.status ?: SchoolStatus.ACTIVE
         }
 
@@ -133,7 +141,7 @@ class SchoolService {
             address = address,
             email = email,
             phone = phone,
-            ownerId = ownerId,
+            ownerId = owner?.id,
             status = status,
             createdAt = createdAt,
             updatedAt = updatedAt,

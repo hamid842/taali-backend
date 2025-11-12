@@ -26,7 +26,7 @@ class SchoolResource {
     fun getMySchools(): Response {
         try {
             val ownerId = requestContext.userId ?: return Response.status(Response.Status.UNAUTHORIZED).build()
-
+            println("Current user ID from context: $ownerId")
             val schools = schoolService.getSchoolsByOwner(ownerId)
             return Response.ok(schools).build()
         } catch (e: Exception) {

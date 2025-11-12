@@ -62,6 +62,7 @@ class AuthenticationFilter : ContainerRequestFilter {
                 // Don't abort here - let Quarkus security handle it
             }
 
+
             // Language header
             val languageHeader = containerContext.getHeaderString("Accept-Language")
             requestContext.setLanguageFromHeader(languageHeader)
