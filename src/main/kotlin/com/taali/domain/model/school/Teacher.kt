@@ -30,7 +30,7 @@ class Teacher : AuditableEntity() {
     @Column(name = "hire_date")
     var hireDate: java.time.LocalDate? = null
 
-    @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "teacher", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     var classAssignments: MutableSet<ClassTeacher> = mutableSetOf()
 
     companion object : PanacheCompanion<Teacher> {

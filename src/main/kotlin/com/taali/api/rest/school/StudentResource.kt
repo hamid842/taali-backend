@@ -20,19 +20,20 @@ class StudentResource {
 
     @GET
     @Path("/school/{schoolId}")
-    fun getStudentsBySchool( @RestPath schoolId: Long,
-                             @QueryParam("page") @DefaultValue("0") page: Int,
-                             @QueryParam("size") @DefaultValue("20") size: Int,
-                             @QueryParam("search") search: String?,
-                             @QueryParam("gradeLevel") gradeLevel: String?,
-                             @QueryParam("classId") classId: Long?): Response {
+    fun getStudentsBySchool(
+        @RestPath schoolId: Long,
+        @QueryParam("page") @DefaultValue("0") page: Int,
+        @QueryParam("size") @DefaultValue("20") size: Int,
+        @QueryParam("search") search: String?,
+        @QueryParam("gradeLevel") gradeLevel: String?,
+        @QueryParam("classId") classId: Long?
+    ): Response {
         return try {
             val studentsPage = studentService.getStudentsBySchool(schoolId, page, size, search, gradeLevel, classId)
             Response.ok(studentsPage).build()
         } catch (e: Exception) {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to fetch students: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to fetch students: ${e.message}")).build()
         }
     }
 
@@ -44,8 +45,7 @@ class StudentResource {
             Response.ok(classes).build()
         } catch (e: Exception) {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to fetch classes: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to fetch classes: ${e.message}")).build()
         }
     }
 
@@ -57,14 +57,11 @@ class StudentResource {
             if (student != null) {
                 Response.ok(student).build()
             } else {
-                Response.status(Response.Status.NOT_FOUND)
-                    .entity(mapOf("error" to "Student not found"))
-                    .build()
+                Response.status(Response.Status.NOT_FOUND).entity(mapOf("error" to "Student not found")).build()
             }
         } catch (e: Exception) {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to fetch student: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to fetch student: ${e.message}")).build()
         }
     }
 
@@ -76,8 +73,7 @@ class StudentResource {
             Response.ok(students).build()
         } catch (e: Exception) {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to fetch students: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to fetch students: ${e.message}")).build()
         }
     }
 
@@ -89,8 +85,62 @@ class StudentResource {
             Response.ok(gradeLevels).build()
         } catch (e: Exception) {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to fetch grade levels: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to fetch grade levels: ${e.message}")).build()
+        }
+    }
+
+    // NEW: Assign student to class
+    @POST
+    @Path("/{studentId}/assign-class")
+    @Transactional
+    fun assignStudentToClass(
+        @RestPath studentId: Long,
+        request: AssignClassRequest
+    ): Response {
+        return try {
+            val success = studentService.assignStudentToClass(studentId, request.classId)
+            if (success) {
+                Response.ok(mapOf("message" to "Student assigned to class successfully")).build()
+            } else {
+                Response.status(Response.Status.NOT_FOUND)
+                    .entity(mapOf("error" to "Student or class not found")).build()
+            }
+        } catch (e: Exception) {
+            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(mapOf("error" to "Failed to assign student to class: ${e.message}")).build()
+        }
+    }
+
+    // NEW: Remove student from class
+    @DELETE
+    @Path("/{studentId}/class")
+    @Transactional
+    fun removeStudentFromClass(@RestPath studentId: Long): Response {
+        return try {
+            val success = studentService.removeStudentFromClass(studentId)
+            if (success) {
+                Response.ok(mapOf("message" to "Student removed from class successfully")).build()
+            } else {
+                Response.status(Response.Status.NOT_FOUND)
+                    .entity(mapOf("error" to "Student not found or not in any class")).build()
+            }
+        } catch (e: Exception) {
+            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(mapOf("error" to "Failed to remove student from class: ${e.message}")).build()
+        }
+    }
+
+    // NEW: Bulk assign students to class
+    @POST
+    @Path("/bulk-assign-class")
+    @Transactional
+    fun bulkAssignStudentsToClass(request: BulkAssignClassRequest): Response {
+        return try {
+            val results = studentService.bulkAssignStudentsToClass(request.studentIds, request.classId)
+            Response.ok(results).build()
+        } catch (e: Exception) {
+            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(mapOf("error" to "Failed to assign students to class: ${e.message}")).build()
         }
     }
 
@@ -99,22 +149,19 @@ class StudentResource {
     @Path("/user/{userId}/details")
     @Transactional
     fun updateStudentDetails(
-        @RestPath userId: Long,
-        details: StudentDetailsRequest
+        @RestPath userId: Long, details: StudentDetailsRequest
     ): Response {
         return try {
             val updatedStudent = studentService.updateStudentDetailsByUser(userId, details)
             if (updatedStudent != null) {
                 Response.ok(updatedStudent).build()
             } else {
-                Response.status(Response.Status.NOT_FOUND)
-                    .entity(mapOf("error" to "Student not found for this user"))
+                Response.status(Response.Status.NOT_FOUND).entity(mapOf("error" to "Student not found for this user"))
                     .build()
             }
         } catch (e: Exception) {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to update student details: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to update student details: ${e.message}")).build()
         }
     }
 
@@ -123,16 +170,14 @@ class StudentResource {
     @Path("/user/{userId}/parents")
     @Transactional
     fun associateParents(
-        @RestPath userId: String,
-        parentData: ParentAssociationRequest
+        @RestPath userId: String, parentData: ParentAssociationRequest
     ): Response {
         return try {
             val result = studentService.associateParentsByUser(userId, parentData)
             Response.ok(result).build()
         } catch (e: Exception) {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to associate parents: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to associate parents: ${e.message}")).build()
         }
     }
 
@@ -145,19 +190,22 @@ class StudentResource {
             if (student != null) {
                 Response.ok(student).build()
             } else {
-                Response.status(Response.Status.NOT_FOUND)
-                    .entity(mapOf("error" to "Student not found for this user"))
+                Response.status(Response.Status.NOT_FOUND).entity(mapOf("error" to "Student not found for this user"))
                     .build()
             }
         } catch (e: Exception) {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("error" to "Failed to fetch student: ${e.message}"))
-                .build()
+                .entity(mapOf("error" to "Failed to fetch student: ${e.message}")).build()
         }
     }
 }
 
+// NEW DTOs for class assignment
+data class AssignClassRequest(
+    val classId: Long
+)
 
-
-
-
+data class BulkAssignClassRequest(
+    val studentIds: List<Long>,
+    val classId: Long
+)

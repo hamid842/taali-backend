@@ -8,17 +8,17 @@ import com.taali.api.mapper.SchoolClassMapper
 import com.taali.domain.model.school.*
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
+import java.time.LocalDateTime
 
 @ApplicationScoped
 class SchoolClassService {
 
     @Transactional
     fun createClass(request: CreateSchoolClassRequest): SchoolClassResponse {
-        // Use School.find() instead of School.findById()
         val foundSchool = School.find("id", request.schoolId).firstResult()
             ?: throw IllegalArgumentException("School not found with id: ${request.schoolId}")
 
-        // Check if class name already exists for this school and academic year
+        // Check if class name already exists
         val existingClass = SchoolClass.find(
             "name = ?1 and school.id = ?2 and academicYear = ?3",
             request.name, request.schoolId, request.academicYear
@@ -28,6 +28,7 @@ class SchoolClassService {
             throw IllegalArgumentException("Class with name '${request.name}' already exists for this academic year")
         }
 
+        // Create and persist the SchoolClass FIRST
         val schoolClass = SchoolClass().apply {
             name = request.name
             gradeLevel = request.gradeLevel
@@ -36,15 +37,18 @@ class SchoolClassService {
             school = foundSchool
         }
 
-        // Set main teacher if provided
-        request.mainTeacherId?.let { teacherId ->
-            val teacher = Teacher.find("id", teacherId).firstResult()
-                ?: throw IllegalArgumentException("Teacher not found with id: $teacherId")
-            schoolClass.mainTeacher = teacher
-            schoolClass.teachers.add(teacher)
+        // PERSIST THE SCHOOL CLASS FIRST to get an ID
+        schoolClass.persist()
+
+        // FLUSH to ensure the class is saved and has an ID
+        SchoolClass.flush()
+
+        // NOW handle teacher assignments - but use a separate transaction or ensure proper persistence
+        if (request.mainTeacherId != null || request.teacherIds.isNotEmpty()) {
+            assignTeachersToClass(schoolClass.id!!, request.teacherIds, request.mainTeacherId)
         }
 
-        // Add students
+        // Add students (if this relationship works)
         if (request.studentIds.isNotEmpty()) {
             val students = Student.list("id in ?1", request.studentIds)
             if (students.size != request.studentIds.size) {
@@ -53,17 +57,48 @@ class SchoolClassService {
             schoolClass.students.addAll(students)
         }
 
-        // Add additional teachers
-        if (request.teacherIds.isNotEmpty()) {
-            val teachers = Teacher.list("id in ?1", request.teacherIds)
-            if (teachers.size != request.teacherIds.size) {
-                throw IllegalArgumentException("Some teachers not found")
+        return SchoolClassMapper.toResponse(schoolClass)
+    }
+
+    @Transactional
+    fun assignTeachersToClass(classId: Long, teacherIds: List<Long>, mainTeacherId: Long?) {
+        val schoolClass = SchoolClass.findById(classId)
+            ?: throw IllegalArgumentException("Class not found with id: $classId")
+
+        // Add main teacher if provided
+        mainTeacherId?.let { teacherId ->
+            val teacher = Teacher.findById(teacherId)
+                ?: throw IllegalArgumentException("Teacher not found with id: $teacherId")
+
+            val mainClassTeacher = ClassTeacher().apply {
+                this.teacher = teacher
+                this.schoolClass = schoolClass // This is now a managed entity with ID
+                this.subject = teacher.specializations.firstOrNull() ?: "General"
+                this.isMainTeacher = true
+                this.createdAt = LocalDateTime.now()
+                this.updatedAt = LocalDateTime.now()
             }
-            schoolClass.teachers.addAll(teachers)
+            mainClassTeacher.persist()
         }
 
-        schoolClass.persist()
-        return SchoolClassMapper.toResponse(schoolClass)
+        // Add other teachers
+        teacherIds.forEach { teacherId ->
+            // Skip if this is the main teacher (already added)
+            if (teacherId != mainTeacherId) {
+                val teacher = Teacher.findById(teacherId)
+                    ?: throw IllegalArgumentException("Teacher not found with id: $teacherId")
+
+                val classTeacher = ClassTeacher().apply {
+                    this.teacher = teacher
+                    this.schoolClass = schoolClass // This is now a managed entity with ID
+                    this.subject = teacher.specializations.firstOrNull() ?: "General"
+                    this.isMainTeacher = false
+                    this.createdAt = LocalDateTime.now()
+                    this.updatedAt = LocalDateTime.now()
+                }
+                classTeacher.persist()
+            }
+        }
     }
 
     fun getClassById(id: Long): SchoolClassDetailResponse {

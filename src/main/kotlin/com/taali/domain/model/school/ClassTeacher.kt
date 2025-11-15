@@ -30,5 +30,9 @@ class ClassTeacher : AuditableEntity() {
         fun findByClass(classId: Long): List<ClassTeacher> {
             return find("schoolClass.id", classId).list()
         }
+
+        fun findByTeacherAndClass(teacherId: Long, classId: Long): ClassTeacher? {
+            return find("teacher.id = ?1 and schoolClass.id = ?2", teacherId, classId).firstResult()
+        }
     }
 }

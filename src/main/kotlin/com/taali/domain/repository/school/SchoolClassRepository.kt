@@ -7,6 +7,10 @@ import jakarta.enterprise.context.ApplicationScoped
 @ApplicationScoped
 class SchoolClassRepository : PanacheRepository<SchoolClass> {
 
+    fun findBySchool(schoolId: Long): List<SchoolClass> {
+        return find("school.id", schoolId).list()
+    }
+
     fun findBySchoolAndAcademicYear(schoolId: Long, academicYear: String): List<SchoolClass> {
         return find("school.id = ?1 and academicYear = ?2", schoolId, academicYear).list()
     }

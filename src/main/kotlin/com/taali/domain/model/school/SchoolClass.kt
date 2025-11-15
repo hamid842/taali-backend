@@ -52,6 +52,10 @@ class SchoolClass : AuditableEntity() {
     @OneToMany(mappedBy = "schoolClass", fetch = FetchType.LAZY)
     var classTeachers: MutableSet<ClassTeacher> = mutableSetOf()
 
+    fun getTeachers(): List<Teacher> {
+        return classTeachers.mapNotNull { it.teacher }
+    }
+
     companion object : PanacheCompanion<SchoolClass> {
         fun findBySchool(schoolId: Long): List<SchoolClass> {
             return find("school.id", schoolId).list()
@@ -60,5 +64,6 @@ class SchoolClass : AuditableEntity() {
         fun findActiveBySchool(schoolId: Long): List<SchoolClass> {
             return find("school.id = ?1 and isActive = ?2", schoolId, true).list()
         }
+
     }
 }

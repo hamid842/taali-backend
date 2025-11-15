@@ -2,7 +2,9 @@ package com.taali.application.service.school
 
 import com.taali.api.dto.school.request.ParentAssociationRequest
 import com.taali.api.dto.school.request.StudentDetailsRequest
+import com.taali.api.dto.school.response.BulkAssignmentResponse
 import com.taali.api.dto.school.response.ClassResponse
+import com.taali.api.dto.school.response.StudentAssignmentResponse
 import com.taali.api.dto.school.response.StudentResponse
 import com.taali.api.dto.shared.PagedResponseDto
 import com.taali.api.dto.shared.PaginationInfoDto
@@ -282,6 +284,49 @@ class StudentService {
             "createdParents" to createdParents,
             "errors" to errors,
             "message" to "Successfully associated ${associatedParents.size} parents"
+        )
+    }
+
+    @Transactional
+    fun assignStudentToClass(studentId: Long, classId: Long): Boolean {
+        val student = Student.findById(studentId) ?: return false
+        val schoolClass = SchoolClass.findById(classId) ?: return false
+
+        student.schoolClass = schoolClass
+        return true
+    }
+
+    @Transactional
+    fun removeStudentFromClass(studentId: Long): Boolean {
+        val student = Student.findById(studentId) ?: return false
+
+        if (student.schoolClass == null) {
+            return false
+        }
+
+        student.schoolClass = null
+        return true
+    }
+
+    @Transactional
+    fun bulkAssignStudentsToClass(studentIds: List<Long>, classId: Long): BulkAssignmentResponse {
+        val schoolClass = SchoolClass.findById(classId) ?: throw IllegalArgumentException("Class not found")
+
+        val results = studentIds.map { studentId ->
+            val student = Student.findById(studentId)
+            if (student != null) {
+                student.schoolClass = schoolClass
+                StudentAssignmentResponse(studentId, true, null)
+            } else {
+                StudentAssignmentResponse(studentId, false, "Student not found")
+            }
+        }
+
+        return BulkAssignmentResponse(
+            total = studentIds.size,
+            successful = results.count { it.success },
+            failed = results.count { !it.success },
+            details = results
         )
     }
 }
