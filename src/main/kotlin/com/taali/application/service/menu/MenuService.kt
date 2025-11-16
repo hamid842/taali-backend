@@ -21,9 +21,9 @@ class MenuService @Inject constructor(
     @PostConstruct
     @Transactional
     fun initializeDefaultMenu() {
-        if (menuItemRepository.count() == 0L) {
+//        if (menuItemRepository.count() == 0L) {
             createDefaultMenu()
-        }
+//        }
     }
 
     fun getMenuForRole(role: UserRole): List<MenuItemDto> {
@@ -47,7 +47,9 @@ class MenuService @Inject constructor(
                 "student:read", "student:create", "student:update", "student:delete",
                 "parent:read", "parent:create", "parent:update", "parent:delete",
                 "finance:read", "finance:tuition:read", "finance:invoice:read", "finance:reports:read",
-                "reports:generate"
+                "reports:generate",
+                "lesson:create", "lesson:read", "lesson:update", "lesson:delete",
+                "school:settings:read", "school:settings:update","school:settings:create"
             )
 
             UserRole.SUPERVISOR -> listOf(
@@ -233,7 +235,17 @@ class MenuService @Inject constructor(
         createMenuItem("menu_finance_invoice", "file-text", "/admin/finance/invoice", "/admin/finance/invoice", 1, setOf(UserRole.ADMIN), adminFinance, "finance:invoice:read")
         createMenuItem("menu_finance_reports", "chart-bar", "/admin/finance/reports", "/admin/finance/reports", 2, setOf(UserRole.ADMIN), adminFinance, "finance:reports:read")
 
+        // Lessons Management with children
+        val adminLessonsManagement = createMenuItem("menu_lessons_management", "book-open", null, null, 7, setOf(UserRole.ADMIN))
+        createMenuItem("menu_create_lesson", "book-plus", "/admin/lessons/create", "/admin/lessons/create", 0, setOf(UserRole.ADMIN), adminLessonsManagement, "lesson:create")
+        createMenuItem("menu_list_lessons", "library", "/admin/lessons", "/admin/lessons", 1, setOf(UserRole.ADMIN), adminLessonsManagement, "lesson:read")
+
+        // School Settings
+        val adminSchoolSettings = createMenuItem("menu_school_settings", "settings", "/admin/school-settings", "/admin/school-settings", 8, setOf(UserRole.ADMIN), requiredPermission = "school:settings:read")
+        createMenuItem("menu_timestamp", "alarm-clock", "/admin/school-settings/timestamp", "/admin/school-settings/timestamp", 0, setOf(UserRole.SUPERVISOR), adminSchoolSettings, "school:settings:create")
+
         // ==================== SUPERVISOR MENU ====================
+
         // Supervisor has same access as ADMIN but without user management
         val supervisorDashboard = createMenuItem("menu_dashboard", "layout-dashboard", "/supervisor/dashboard", "/supervisor/dashboard", 0, setOf(UserRole.SUPERVISOR))
 

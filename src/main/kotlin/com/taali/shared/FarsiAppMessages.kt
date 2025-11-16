@@ -166,6 +166,21 @@ interface FarsiAppMessages : AppMessages {
     @Message("گزارشات")
     override fun menu_finance_reports(): String
 
+    @Message("مدیریت دروس")
+    override fun menu_lessons_management(): String
+
+    @Message("ایجاد درس جدید")
+    override fun menu_create_lesson(): String
+
+    @Message("دروس")
+    override fun menu_list_lessons(): String
+
+    @Message("تنظیمات مدرسه")
+    override fun menu_school_settings(): String
+
+    @Message("زمانبندی کلاسها")
+    override fun menu_timestamp(): String
+
     // Validation Messages
     @Message("نام الزامی است")
     override fun validation_first_name_required(): String

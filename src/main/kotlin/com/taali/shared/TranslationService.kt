@@ -107,6 +107,11 @@ class TranslationService {
                 "menu_finance_tuition" -> localizedMessages.menu_finance_tuition()
                 "menu_finance_invoice" -> localizedMessages.menu_finance_invoice()
                 "menu_finance_reports" -> localizedMessages.menu_finance_reports()
+                "menu_lessons_management" -> localizedMessages.menu_lessons_management()
+                "menu_create_lesson" -> localizedMessages.menu_create_lesson()
+                "menu_list_lessons" -> localizedMessages.menu_list_lessons()
+                "menu_school_settings" -> localizedMessages.menu_school_settings()
+                "menu_timestamp" -> localizedMessages.menu_timestamp()
 
                 // Validation keys - updated to snake_case
                 "validation_first_name_required" -> localizedMessages.validation_first_name_required()

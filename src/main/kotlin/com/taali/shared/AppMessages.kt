@@ -166,6 +166,21 @@ interface AppMessages {
     @Message("Reports")
     fun menu_finance_reports(): String
 
+    @Message("Lesson Management")
+    fun menu_lessons_management(): String
+
+    @Message("Create Lesson")
+    fun menu_create_lesson(): String
+
+    @Message("Lessons")
+    fun menu_list_lessons(): String
+
+    @Message("School Settings")
+    fun menu_school_settings(): String
+
+    @Message("Class Period Timing")
+    fun menu_timestamp(): String
+
     // Validation Messages
     @Message("First name is required")
     fun validation_first_name_required(): String
