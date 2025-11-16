@@ -23,7 +23,7 @@ class UserResource {
     lateinit var userService: UserService
 
     @GET
-    @RolesAllowed("OWNER", "ADMIN", "SUPERVISOR")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     @Operation(summary = "Get users with pagination and filtering")
     fun getUsers(
         @Context securityContext: SecurityContext,
@@ -45,7 +45,7 @@ class UserResource {
 
     @GET
     @Path("/{userId}")
-    @RolesAllowed("OWNER", "ADMIN", "SUPERVISOR")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     @Operation(summary = "Get user by ID")
     fun getUserById(
         @Context securityContext: SecurityContext,
@@ -72,7 +72,7 @@ class UserResource {
 
     @PUT
     @Path("/{userId}/status")
-    @RolesAllowed("OWNER", "ADMIN", "SUPERVISOR")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     @Operation(summary = "Update user status")
     fun updateUserStatus(
         @Context securityContext: SecurityContext,

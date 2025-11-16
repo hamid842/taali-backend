@@ -20,7 +20,7 @@ class SchoolClassResource {
     lateinit var schoolClassService: SchoolClassService
 
     @POST
-    @RolesAllowed("OWNER", "ADMIN", "SUPERVISOR")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     fun createClass(request: CreateSchoolClassRequest): Response {
         try {
             val schoolClass = schoolClassService.createClass(request)
@@ -54,7 +54,7 @@ class SchoolClassResource {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed("OWNER", "ADMIN", "SUPERVISOR")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     fun updateClass(@PathParam("id") id: Long, request: UpdateSchoolClassRequest): Response {
         try {
             val schoolClass = schoolClassService.updateClass(id, request)
@@ -68,7 +68,7 @@ class SchoolClassResource {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed("OWNER", "ADMIN", "SUPERVISOR")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     fun deleteClass(@PathParam("id") id: Long): Response {
         try {
             schoolClassService.deleteClass(id)
@@ -82,7 +82,7 @@ class SchoolClassResource {
 
     @POST
     @Path("/{classId}/students/{studentId}")
-    @RolesAllowed("OWNER", "ADMIN", "SUPERVISOR")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     fun addStudentToClass(
         @PathParam("classId") classId: Long, @PathParam("studentId") studentId: Long
     ): Response {
@@ -98,7 +98,7 @@ class SchoolClassResource {
 
     @DELETE
     @Path("/{classId}/students/{studentId}")
-    @RolesAllowed("OWNER", "ADMIN", "SUPERVISOR")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     fun removeStudentFromClass(
         @PathParam("classId") classId: Long, @PathParam("studentId") studentId: Long
     ): Response {

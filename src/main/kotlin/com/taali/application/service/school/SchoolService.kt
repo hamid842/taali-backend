@@ -1,6 +1,7 @@
 package com.taali.application.service.school
 
 import com.taali.api.dto.school.*
+import com.taali.api.mapper.toDto
 import com.taali.application.service.user.UserService
 import com.taali.domain.enum.SchoolStatus
 import com.taali.domain.model.school.School
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory
 @ApplicationScoped
 class SchoolService {
     private val logger = LoggerFactory.getLogger(UserService::class.java)
+
     @Inject
     lateinit var schoolRepository: SchoolRepository
 
@@ -130,24 +132,5 @@ class SchoolService {
         } catch (e: Exception) {
             false
         }
-    }
-
-    private fun School.toDto(): SchoolDto {
-        return SchoolDto(
-            id = id!!,
-            name = name,
-            code = code,
-            image = image,
-            address = address,
-            email = email,
-            phone = phone,
-            ownerId = owner?.id,
-            status = status,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            teacherCount = teacherCount,
-            classCount = classCount,
-            studentCount = studentCount,
-        )
     }
 }

@@ -53,7 +53,7 @@ class SchoolResource {
 
     @GET
     @Path("/{id}")
-    @RolesAllowed("OWNER", "ADMIN")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER")
     fun getSchool(@PathParam("id") id: Long): Response {
         try {
             val school = schoolService.getSchoolById(id) ?: return Response.status(Response.Status.NOT_FOUND).build()

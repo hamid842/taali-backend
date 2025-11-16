@@ -51,7 +51,7 @@ class AuthenticationFilter : ContainerRequestFilter {
                 val userId = extractUserIdFromToken(principal)
 
                 // Check for roles
-                val roles = listOf("OWNER", "ADMIN", "TEACHER", "USER")
+                val roles = listOf("OWNER", "SCHOOL_MANAGER", "TEACHER", "USER")
                 val userRole = roles.firstOrNull { securityContext.isUserInRole(it) }
 
                 // Use the correct method for UUID strings

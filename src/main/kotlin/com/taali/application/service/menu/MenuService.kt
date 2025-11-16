@@ -40,7 +40,7 @@ class MenuService @Inject constructor(
                 "reports:generate", "system:manage", "billing:manage"
             )
 
-            UserRole.ADMIN -> listOf(
+            UserRole.SCHOOL_MANAGER -> listOf(
                 "user:create", "user:read", "user:update", "user:delete",
                 "teacher:read", "teacher:create", "teacher:update", "teacher:delete",
                 "class:read", "class:create", "class:update", "class:delete",
@@ -52,7 +52,7 @@ class MenuService @Inject constructor(
                 "school:settings:read", "school:settings:update","school:settings:create"
             )
 
-            UserRole.SUPERVISOR -> listOf(
+            UserRole.SCHOOL_ADMIN -> listOf(
                 "teacher:read", "teacher:create", "teacher:update", "teacher:delete",
                 "class:read", "class:create", "class:update", "class:delete",
                 "student:read", "student:create", "student:update", "student:delete",
@@ -202,82 +202,82 @@ class MenuService @Inject constructor(
         createMenuItem("menu_billing", "credit-card", "/owner/billing", "/owner/billing", 0, setOf(UserRole.OWNER), ownerFinance, "billing:manage")
         createMenuItem("menu_financial_reports", "chart-bar", "/owner/financial-reports", "/owner/financial-reports", 1, setOf(UserRole.OWNER), ownerFinance, "reports:generate")
 
-        // ==================== ADMIN MENU ====================
-        val adminDashboard = createMenuItem("menu_dashboard", "layout-dashboard", "/admin/dashboard", "/admin/dashboard", 0, setOf(UserRole.ADMIN))
+        // ==================== SCHOOL MANAGER MENU ====================
+        val adminDashboard = createMenuItem("menu_dashboard", "layout-dashboard", "/manager/dashboard", "/manager/dashboard", 0, setOf(UserRole.SCHOOL_MANAGER))
 
-        val adminUserManagement = createMenuItem("menu_user_management", "users-round", null, null, 1, setOf(UserRole.ADMIN))
-        createMenuItem("menu_create_user", "user-plus", "/admin/users/create", "/admin/users/create", 0, setOf(UserRole.ADMIN), adminUserManagement, "user:create")
-        createMenuItem("menu_list_users", "users", "/admin/users", "/admin/users", 1, setOf(UserRole.ADMIN), adminUserManagement, "user:read")
+        val adminUserManagement = createMenuItem("menu_user_management", "users-round", null, null, 1, setOf(UserRole.SCHOOL_MANAGER))
+        createMenuItem("menu_create_user", "user-plus", "/manager/users/create", "/manager/users/create", 0, setOf(UserRole.SCHOOL_MANAGER), adminUserManagement, "user:create")
+        createMenuItem("menu_list_users", "users", "/manager/users", "/manager/users", 1, setOf(UserRole.SCHOOL_MANAGER), adminUserManagement, "user:read")
 
         // Teacher Management with children
-        val adminTeacherManagement = createMenuItem("menu_teacher_management", "contact", null, null, 2, setOf(UserRole.ADMIN))
-        createMenuItem("menu_list_teachers", "list", "/admin/teachers", "/admin/teachers", 0, setOf(UserRole.ADMIN), adminTeacherManagement, "teacher:read")
-        createMenuItem("menu_create_teacher", "user-round-plus", "/admin/teachers/create", "/admin/teachers/create", 1, setOf(UserRole.ADMIN), adminTeacherManagement, "teacher:create")
+        val adminTeacherManagement = createMenuItem("menu_teacher_management", "contact", null, null, 2, setOf(UserRole.SCHOOL_MANAGER))
+        createMenuItem("menu_list_teachers", "list", "/manager/teachers", "/manager/teachers", 0, setOf(UserRole.SCHOOL_MANAGER), adminTeacherManagement, "teacher:read")
+        createMenuItem("menu_create_teacher", "user-round-plus", "/manager/teachers/create", "/manager/teachers/create", 1, setOf(UserRole.SCHOOL_MANAGER), adminTeacherManagement, "teacher:create")
 
         // Class Management with children
-        val adminClassManagement = createMenuItem("menu_class_management", "grid-2x2", null, null, 3, setOf(UserRole.ADMIN))
-        createMenuItem("menu_list_classes", "list", "/admin/classes", "/admin/classes", 0, setOf(UserRole.ADMIN), adminClassManagement, "class:read")
-        createMenuItem("menu_create_class", "grid-2x2-plus", "/admin/classes/create", "/admin/classes/create", 1, setOf(UserRole.ADMIN), adminClassManagement, "class:create")
+        val adminClassManagement = createMenuItem("menu_class_management", "grid-2x2", null, null, 3, setOf(UserRole.SCHOOL_MANAGER))
+        createMenuItem("menu_list_classes", "list", "/manager/classes", "/manager/classes", 0, setOf(UserRole.SCHOOL_MANAGER), adminClassManagement, "class:read")
+        createMenuItem("menu_create_class", "grid-2x2-plus", "/manager/classes/create", "/manager/classes/create", 1, setOf(UserRole.SCHOOL_MANAGER), adminClassManagement, "class:create")
 
         // Student Management with children
-        val adminStudentManagement = createMenuItem("menu_student_management", "graduation-cap", null, null, 4, setOf(UserRole.ADMIN))
-        createMenuItem("menu_list_students", "list", "/admin/students", "/admin/students", 0, setOf(UserRole.ADMIN), adminStudentManagement, "student:read")
-        createMenuItem("menu_create_student", "user-plus", "/admin/students/create", "/admin/students/create", 1, setOf(UserRole.ADMIN), adminStudentManagement, "student:create")
+        val adminStudentManagement = createMenuItem("menu_student_management", "graduation-cap", null, null, 4, setOf(UserRole.SCHOOL_MANAGER))
+        createMenuItem("menu_list_students", "list", "/manager/students", "/manager/students", 0, setOf(UserRole.SCHOOL_MANAGER), adminStudentManagement, "student:read")
+        createMenuItem("menu_create_student", "user-plus", "/manager/students/create", "/manager/students/create", 1, setOf(UserRole.SCHOOL_MANAGER), adminStudentManagement, "student:create")
 
         // Parent Management with children
-        val adminParentManagement = createMenuItem("menu_parent_management", "file-user", null, null, 5, setOf(UserRole.ADMIN))
-        createMenuItem("menu_list_parents", "list", "/admin/parents", "/admin/parents", 0, setOf(UserRole.ADMIN), adminParentManagement, "parent:read")
-        createMenuItem("menu_create_parent", "user-plus", "/admin/parents/create", "/admin/parents/create", 1, setOf(UserRole.ADMIN), adminParentManagement, "parent:create")
+        val adminParentManagement = createMenuItem("menu_parent_management", "file-user", null, null, 5, setOf(UserRole.SCHOOL_MANAGER))
+        createMenuItem("menu_list_parents", "list", "/manager/parents", "/manager/parents", 0, setOf(UserRole.SCHOOL_MANAGER), adminParentManagement, "parent:read")
+        createMenuItem("menu_create_parent", "user-plus", "/manager/parents/create", "/manager/parents/create", 1, setOf(UserRole.SCHOOL_MANAGER), adminParentManagement, "parent:create")
 
         // Finance with children
-        val adminFinance = createMenuItem("menu_finance", "dollar-sign", null, null, 6, setOf(UserRole.ADMIN))
-        createMenuItem("menu_finance_tuition", "credit-card", "/admin/finance/tuition", "/admin/finance/tuition", 0, setOf(UserRole.ADMIN), adminFinance, "finance:tuition:read")
-        createMenuItem("menu_finance_invoice", "file-text", "/admin/finance/invoice", "/admin/finance/invoice", 1, setOf(UserRole.ADMIN), adminFinance, "finance:invoice:read")
-        createMenuItem("menu_finance_reports", "chart-bar", "/admin/finance/reports", "/admin/finance/reports", 2, setOf(UserRole.ADMIN), adminFinance, "finance:reports:read")
+        val adminFinance = createMenuItem("menu_finance", "dollar-sign", null, null, 6, setOf(UserRole.SCHOOL_MANAGER))
+        createMenuItem("menu_finance_tuition", "credit-card", "/manager/finance/tuition", "/manager/finance/tuition", 0, setOf(UserRole.SCHOOL_MANAGER), adminFinance, "finance:tuition:read")
+        createMenuItem("menu_finance_invoice", "file-text", "/manager/finance/invoice", "/manager/finance/invoice", 1, setOf(UserRole.SCHOOL_MANAGER), adminFinance, "finance:invoice:read")
+        createMenuItem("menu_finance_reports", "chart-bar", "/manager/finance/reports", "/manager/finance/reports", 2, setOf(UserRole.SCHOOL_MANAGER), adminFinance, "finance:reports:read")
 
         // Lessons Management with children
-        val adminLessonsManagement = createMenuItem("menu_lessons_management", "book-open", null, null, 7, setOf(UserRole.ADMIN))
-        createMenuItem("menu_create_lesson", "book-plus", "/admin/lessons/create", "/admin/lessons/create", 0, setOf(UserRole.ADMIN), adminLessonsManagement, "lesson:create")
-        createMenuItem("menu_list_lessons", "library", "/admin/lessons", "/admin/lessons", 1, setOf(UserRole.ADMIN), adminLessonsManagement, "lesson:read")
+        val adminLessonsManagement = createMenuItem("menu_lessons_management", "book-open", null, null, 7, setOf(UserRole.SCHOOL_MANAGER))
+        createMenuItem("menu_create_lesson", "book-plus", "/manager/lessons/create", "/manager/lessons/create", 0, setOf(UserRole.SCHOOL_MANAGER), adminLessonsManagement, "lesson:create")
+        createMenuItem("menu_list_lessons", "library", "/manager/lessons", "/manager/lessons", 1, setOf(UserRole.SCHOOL_MANAGER), adminLessonsManagement, "lesson:read")
 
         // School Settings
-        val adminSchoolSettings = createMenuItem("menu_school_settings", "settings", "/admin/school-settings", "/admin/school-settings", 8, setOf(UserRole.ADMIN), requiredPermission = "school:settings:read")
-        createMenuItem("menu_timestamp", "alarm-clock", "/admin/school-settings/timestamp", "/admin/school-settings/timestamp", 0, setOf(UserRole.SUPERVISOR), adminSchoolSettings, "school:settings:create")
+        val adminSchoolSettings = createMenuItem("menu_school_settings", "settings", "/manager/school-settings", "/manager/school-settings", 8, setOf(UserRole.SCHOOL_MANAGER), requiredPermission = "school:settings:read")
+        createMenuItem("menu_timestamp", "alarm-clock", "/manager/school-settings/timestamp", "/manager/school-settings/timestamp", 0, setOf(UserRole.SCHOOL_ADMIN), adminSchoolSettings, "school:settings:create")
 
-        // ==================== SUPERVISOR MENU ====================
+        // ==================== SCHOOL_ADMIN MENU ====================
 
         // Supervisor has same access as ADMIN but without user management
-        val supervisorDashboard = createMenuItem("menu_dashboard", "layout-dashboard", "/supervisor/dashboard", "/supervisor/dashboard", 0, setOf(UserRole.SUPERVISOR))
+        val supervisorDashboard = createMenuItem("menu_dashboard", "layout-dashboard", "/admin/dashboard", "/admin/dashboard", 0, setOf(UserRole.SCHOOL_ADMIN))
 
         // Teacher Management with children (same as ADMIN)
-        val supervisorTeacherManagement = createMenuItem("menu_teacher_management", "contact", null, null, 1, setOf(UserRole.SUPERVISOR))
-        createMenuItem("menu_list_teachers", "list", "/supervisor/teachers", "/supervisor/teachers", 0, setOf(UserRole.SUPERVISOR), supervisorTeacherManagement, "teacher:read")
-        createMenuItem("menu_create_teacher", "user-round-plus", "/supervisor/teachers/create", "/supervisor/teachers/create", 1, setOf(UserRole.SUPERVISOR), supervisorTeacherManagement, "teacher:create")
+        val supervisorTeacherManagement = createMenuItem("menu_teacher_management", "contact", null, null, 1, setOf(UserRole.SCHOOL_ADMIN))
+        createMenuItem("menu_list_teachers", "list", "/admin/teachers", "/admin/teachers", 0, setOf(UserRole.SCHOOL_ADMIN), supervisorTeacherManagement, "teacher:read")
+        createMenuItem("menu_create_teacher", "user-round-plus", "/admin/teachers/create", "/admin/teachers/create", 1, setOf(UserRole.SCHOOL_ADMIN), supervisorTeacherManagement, "teacher:create")
 
         // Class Management with children (same as ADMIN)
-        val supervisorClassManagement = createMenuItem("menu_class_management", "grid-2x2", null, null, 2, setOf(UserRole.SUPERVISOR))
-        createMenuItem("menu_list_classes", "list", "/supervisor/classes", "/supervisor/classes", 0, setOf(UserRole.SUPERVISOR), supervisorClassManagement, "class:read")
-        createMenuItem("menu_create_class", "grid-2x2-plus", "/supervisor/classes/create", "/supervisor/classes/create", 1, setOf(UserRole.SUPERVISOR), supervisorClassManagement, "class:create")
+        val supervisorClassManagement = createMenuItem("menu_class_management", "grid-2x2", null, null, 2, setOf(UserRole.SCHOOL_ADMIN))
+        createMenuItem("menu_list_classes", "list", "/admin/classes", "/admin/classes", 0, setOf(UserRole.SCHOOL_ADMIN), supervisorClassManagement, "class:read")
+        createMenuItem("menu_create_class", "grid-2x2-plus", "/admin/classes/create", "/admin/classes/create", 1, setOf(UserRole.SCHOOL_ADMIN), supervisorClassManagement, "class:create")
 
         // Student Management with children (same as ADMIN)
-        val supervisorStudentManagement = createMenuItem("menu_student_management", "graduation-cap", null, null, 3, setOf(UserRole.SUPERVISOR))
-        createMenuItem("menu_list_students", "list", "/supervisor/students", "/supervisor/students", 0, setOf(UserRole.SUPERVISOR), supervisorStudentManagement, "student:read")
-        createMenuItem("menu_create_student", "user-plus", "/supervisor/students/create", "/supervisor/students/create", 1, setOf(UserRole.SUPERVISOR), supervisorStudentManagement, "student:create")
+        val supervisorStudentManagement = createMenuItem("menu_student_management", "graduation-cap", null, null, 3, setOf(UserRole.SCHOOL_ADMIN))
+        createMenuItem("menu_list_students", "list", "/admin/students", "/admin/students", 0, setOf(UserRole.SCHOOL_ADMIN), supervisorStudentManagement, "student:read")
+        createMenuItem("menu_create_student", "user-plus", "/admin/students/create", "/admin/students/create", 1, setOf(UserRole.SCHOOL_ADMIN), supervisorStudentManagement, "student:create")
 
         // Parent Management with children (same as ADMIN)
-        val supervisorParentManagement = createMenuItem("menu_parent_management", "user", null, null, 4, setOf(UserRole.SUPERVISOR))
-        createMenuItem("menu_list_parents", "list", "/supervisor/parents", "/supervisor/parents", 0, setOf(UserRole.SUPERVISOR), supervisorParentManagement, "parent:read")
-        createMenuItem("menu_create_parent", "user-plus", "/supervisor/parents/create", "/supervisor/parents/create", 1, setOf(UserRole.SUPERVISOR), supervisorParentManagement, "parent:create")
+        val supervisorParentManagement = createMenuItem("menu_parent_management", "user", null, null, 4, setOf(UserRole.SCHOOL_ADMIN))
+        createMenuItem("menu_list_parents", "list", "/admin/parents", "/admin/parents", 0, setOf(UserRole.SCHOOL_ADMIN), supervisorParentManagement, "parent:read")
+        createMenuItem("menu_create_parent", "user-plus", "/admin/parents/create", "/admin/parents/create", 1, setOf(UserRole.SCHOOL_ADMIN), supervisorParentManagement, "parent:create")
 
         // Finance with children (same as ADMIN)
-        val supervisorFinance = createMenuItem("menu_finance", "dollar-sign", null, null, 5, setOf(UserRole.SUPERVISOR))
-        createMenuItem("menu_finance_tuition", "credit-card", "/supervisor/finance/tuition", "/supervisor/finance/tuition", 0, setOf(UserRole.SUPERVISOR), supervisorFinance, "finance:tuition:read")
-        createMenuItem("menu_finance_invoice", "file-text", "/supervisor/finance/invoice", "/supervisor/finance/invoice", 1, setOf(UserRole.SUPERVISOR), supervisorFinance, "finance:invoice:read")
-        createMenuItem("menu_finance_reports", "chart-bar", "/supervisor/finance/reports", "/supervisor/finance/reports", 2, setOf(UserRole.SUPERVISOR), supervisorFinance, "finance:reports:read")
+        val supervisorFinance = createMenuItem("menu_finance", "dollar-sign", null, null, 5, setOf(UserRole.SCHOOL_ADMIN))
+        createMenuItem("menu_finance_tuition", "credit-card", "/admin/finance/tuition", "/admin/finance/tuition", 0, setOf(UserRole.SCHOOL_ADMIN), supervisorFinance, "finance:tuition:read")
+        createMenuItem("menu_finance_invoice", "file-text", "/admin/finance/invoice", "/admin/finance/invoice", 1, setOf(UserRole.SCHOOL_ADMIN), supervisorFinance, "finance:invoice:read")
+        createMenuItem("menu_finance_reports", "chart-bar", "/admin/finance/reports", "/admin/finance/reports", 2, setOf(UserRole.SCHOOL_ADMIN), supervisorFinance, "finance:reports:read")
 
         // Additional supervisor-specific menus
-        createMenuItem("menu_attendance_reports", "clipboard-check", "/supervisor/attendance", "/supervisor/attendance", 6, setOf(UserRole.SUPERVISOR), requiredPermission = "attendance:view")
-        createMenuItem("menu_academic_calendar", "calendar", "/supervisor/calendar", "/supervisor/calendar", 7, setOf(UserRole.SUPERVISOR), requiredPermission = "calendar:view")
+        createMenuItem("menu_attendance_reports", "clipboard-check", "/admin/attendance", "/admin/attendance", 6, setOf(UserRole.SCHOOL_ADMIN), requiredPermission = "attendance:view")
+        createMenuItem("menu_academic_calendar", "calendar", "/admin/calendar", "/admin/calendar", 7, setOf(UserRole.SCHOOL_ADMIN), requiredPermission = "calendar:view")
 
         // ==================== TEACHER MENU ====================
         createMenuItem("menu_dashboard", "layout-dashboard", "/teacher/dashboard", "/teacher/dashboard", 0, setOf(UserRole.TEACHER))

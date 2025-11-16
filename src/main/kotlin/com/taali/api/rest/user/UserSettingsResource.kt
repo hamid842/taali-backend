@@ -37,7 +37,7 @@ class UserSettingsResource {
 
     @GET
     @Path("/settings")
-    @RolesAllowed("ADMIN", "SUPERVISOR", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
+    @RolesAllowed("SCHOOL_MANAGER", "SCHOOL_ADMIN", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
     fun getUserSettings(): Response {
         try {
             val user = getCurrentUser()
@@ -52,7 +52,7 @@ class UserSettingsResource {
 
     @PUT
     @Path("/settings")
-    @RolesAllowed("ADMIN", "SUPERVISOR", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
+    @RolesAllowed("SCHOOL_MANAGER", "SCHOOL_ADMIN", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
     fun updateUserSettings(request: UpdateUserSettingsRequest): Response {
         try {
             val user = getCurrentUser()
@@ -67,7 +67,7 @@ class UserSettingsResource {
 
     @GET
     @Path("/menu")
-    @RolesAllowed("ADMIN", "SUPERVISOR", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
+    @RolesAllowed("SCHOOL_MANAGER", "SCHOOL_ADMIN", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
     fun getUserMenu(): Response {
         try {
             val user = getCurrentUser()
@@ -82,7 +82,7 @@ class UserSettingsResource {
 
     @GET
     @Path("/translations")
-    @RolesAllowed("ADMIN", "SUPERVISOR", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
+    @RolesAllowed("SCHOOL_MANAGER", "SCHOOL_ADMIN", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
     fun getTranslations(@QueryParam("locale") locale: String?): Response {
         try {
             val user = getCurrentUser()
@@ -103,7 +103,7 @@ class UserSettingsResource {
 
     @GET
     @Path("/preferences")
-    @RolesAllowed("ADMIN", "SUPERVISOR", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
+    @RolesAllowed("SCHOOL_MANAGER", "SCHOOL_ADMIN", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
     fun getUserPreferences(): Response {
         try {
             val user = getCurrentUser()
@@ -132,7 +132,7 @@ class UserSettingsResource {
 
     @POST
     @Path("/settings/reset")
-    @RolesAllowed("ADMIN", "SUPERVISOR", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
+    @RolesAllowed("SCHOOL_MANAGER", "SCHOOL_ADMIN", "TEACHER", "STUDENT", "PARENT", "CANTEEN_OPERATOR", "FINANCE_TEAM")
     fun resetUserSettings(): Response {
         try {
             val user = getCurrentUser()

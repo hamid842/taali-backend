@@ -19,7 +19,7 @@ class MenuResource {
 
     @GET
     @Path("/user")
-    @RolesAllowed("ADMIN", "OWNER","TEACHER")
+    @RolesAllowed("SCHOOL_MANAGER", "OWNER","TEACHER")
     fun getUserMenu(
         @QueryParam("role") role: String,
     ): Response {
@@ -45,10 +45,10 @@ class MenuResource {
     }
 }
 
-@Path("/admin/menu")
+@Path("/manager/menu")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RolesAllowed("ADMIN", "OWNER") // Allow both ADMIN and OWNER
+@RolesAllowed("SCHOOL_MANAGER", "OWNER") // Allow both ADMIN and OWNER
 class MenuManagementResource {
 
     @Inject

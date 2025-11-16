@@ -1,6 +1,5 @@
 package com.taali.api.rest.upload
 
-import com.taali.api.dto.shared.FileUploadFormDto
 import com.taali.shared.RequestContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.inject.Inject
@@ -75,7 +74,7 @@ class UploadResource {
     @POST
     @Path("/profile-image")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @RolesAllowed("OWNER", "ADMIN", "TEACHER", "STUDENT")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "TEACHER", "STUDENT")
     fun uploadProfileImage(@RestForm("file") file: FileUpload?): Response {
         try {
             val userId = requestContext.userId ?: return Response.status(Response.Status.UNAUTHORIZED).build()
