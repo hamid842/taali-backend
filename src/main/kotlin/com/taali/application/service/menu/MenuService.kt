@@ -59,7 +59,7 @@ class MenuService @Inject constructor(
                 "parent:read", "parent:create", "parent:update", "parent:delete",
                 "finance:read", "finance:tuition:read", "finance:invoice:read", "finance:reports:read",
                 "reports:generate",
-                "attendance:view", "calendar:view", "grades:view"
+                "attendance:view", "calendar:view", "grades:view","school:settings:update"
             )
 
             UserRole.TEACHER -> listOf(
@@ -243,10 +243,11 @@ class MenuService @Inject constructor(
         // School Settings
         val adminSchoolSettings = createMenuItem("menu_school_settings", "settings", "/manager/school-settings", "/manager/school-settings", 8, setOf(UserRole.SCHOOL_MANAGER), requiredPermission = "school:settings:read")
         createMenuItem("menu_timestamp", "alarm-clock", "/manager/school-settings/timestamp", "/manager/school-settings/timestamp", 0, setOf(UserRole.SCHOOL_ADMIN), adminSchoolSettings, "school:settings:create")
+        createMenuItem("menu_school_profile", "school", "/manager/school-settings/profile", "/manager/school-settings/profile", 0, setOf(UserRole.SCHOOL_ADMIN), adminSchoolSettings, "school:settings:update")
 
         // ==================== SCHOOL_ADMIN MENU ====================
 
-        // Supervisor has same access as ADMIN but without user management
+        // School admin has same access as ADMIN but without user management
         val supervisorDashboard = createMenuItem("menu_dashboard", "layout-dashboard", "/admin/dashboard", "/admin/dashboard", 0, setOf(UserRole.SCHOOL_ADMIN))
 
         // Teacher Management with children (same as ADMIN)

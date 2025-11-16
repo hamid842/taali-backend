@@ -112,6 +112,7 @@ class TranslationService {
                 "menu_list_lessons" -> localizedMessages.menu_list_lessons()
                 "menu_school_settings" -> localizedMessages.menu_school_settings()
                 "menu_timestamp" -> localizedMessages.menu_timestamp()
+                "menu_school_profile" -> localizedMessages.menu_school_profile()
 
                 // Validation keys - updated to snake_case
                 "validation_first_name_required" -> localizedMessages.validation_first_name_required()

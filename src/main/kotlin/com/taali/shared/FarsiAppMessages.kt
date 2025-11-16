@@ -181,6 +181,9 @@ interface FarsiAppMessages : AppMessages {
     @Message("زمانبندی کلاسها")
     override fun menu_timestamp(): String
 
+    @Message("پروفایل مدرسه")
+    override fun menu_school_profile(): String
+
     // Validation Messages
     @Message("نام الزامی است")
     override fun validation_first_name_required(): String

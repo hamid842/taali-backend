@@ -181,6 +181,9 @@ interface AppMessages {
     @Message("Class Period Timing")
     fun menu_timestamp(): String
 
+    @Message("School Profile")
+    fun menu_school_profile(): String
+
     // Validation Messages
     @Message("First name is required")
     fun validation_first_name_required(): String

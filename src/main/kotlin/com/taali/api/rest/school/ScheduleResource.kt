@@ -13,14 +13,14 @@ import java.time.DayOfWeek
 @Path("/class-schedules")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RolesAllowed("OWNER", "ADMIN", "SCHOOL_ADMIN", "TEACHER")
+@RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN", "TEACHER")
 class ScheduleResource {
 
     @Inject
     lateinit var scheduleService: ScheduleService
 
     @POST
-    @RolesAllowed("OWNER", "ADMIN", "SCHOOL_ADMIN")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     fun createSchedule(request: CreateClassScheduleRequest): Response {
         try {
             val schedule = scheduleService.createSchedule(request)
@@ -76,7 +76,7 @@ class ScheduleResource {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed("OWNER", "ADMIN", "SCHOOL_ADMIN")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     fun updateSchedule(
         @PathParam("id") id: Long,
         request: UpdateClassScheduleRequest
@@ -93,7 +93,7 @@ class ScheduleResource {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed("OWNER", "ADMIN", "SCHOOL_ADMIN")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER", "SCHOOL_ADMIN")
     fun deleteSchedule(@PathParam("id") id: Long): Response {
         try {
             scheduleService.deleteSchedule(id)
