@@ -2,6 +2,7 @@ package com.taali.api.rest.school
 
 import com.taali.application.service.school.ScheduleService
 import com.taali.domain.model.school.Lesson
+import jakarta.annotation.security.RolesAllowed
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
@@ -19,6 +20,7 @@ class LessonResource {
     private val logger: Logger = Logger.getLogger(LessonResource::class.java)
 
     @GET
+    @RolesAllowed("OWNER","SCHOOL_MANAGER","SCHOOL_ADMIN")
     fun getAllLessons(): Response {
         try {
             logger.info("Fetching all lessons")
@@ -34,6 +36,7 @@ class LessonResource {
 
     @GET
     @Path("/grade-level/{gradeLevel}")
+    @RolesAllowed("OWNER","SCHOOL_MANAGER","SCHOOL_ADMIN")
     fun getLessonsByGradeLevel(@PathParam("gradeLevel") gradeLevel: String): Response {
         try {
             logger.info("Fetching lessons for grade level: $gradeLevel")
@@ -54,6 +57,7 @@ class LessonResource {
 
     @GET
     @Path("/{id}")
+    @RolesAllowed("OWNER","SCHOOL_MANAGER","SCHOOL_ADMIN")
     fun getLessonById(@PathParam("id") id: Long): Response {
         try {
             logger.info("Fetching lesson with ID: $id")
@@ -73,6 +77,7 @@ class LessonResource {
     }
 
     @POST
+    @RolesAllowed("OWNER","SCHOOL_MANAGER","SCHOOL_ADMIN")
     fun createLesson(lesson: Lesson): Response {
         try {
             logger.info("Creating new lesson: ${lesson.name} for grade level: ${lesson.gradeLevel}")
@@ -93,6 +98,7 @@ class LessonResource {
 
     @PUT
     @Path("/{id}")
+    @RolesAllowed("OWNER","SCHOOL_MANAGER","SCHOOL_ADMIN")
     fun updateLesson(@PathParam("id") id: Long, lesson: Lesson): Response {
         try {
             logger.info("Updating lesson with ID: $id")
@@ -126,6 +132,7 @@ class LessonResource {
 
     @DELETE
     @Path("/{id}")
+    @RolesAllowed("OWNER","SCHOOL_MANAGER","SCHOOL_ADMIN")
     fun deleteLesson(@PathParam("id") id: Long): Response {
         try {
             logger.info("Deleting lesson with ID: $id")
