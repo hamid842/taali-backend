@@ -10,7 +10,7 @@ import com.taali.domain.model.school.*
 
 object SchoolClassMapper {
 
-    fun toResponse(schoolClass: SchoolClass): SchoolClassResponse {
+    fun toResponse(schoolClass: SchoolClass, studentCount: Long = 0): SchoolClassResponse {
         return SchoolClassResponse(
             id = schoolClass.id!!,
             name = schoolClass.name,
@@ -24,14 +24,15 @@ object SchoolClassMapper {
             mainTeacher = schoolClass.mainTeacher?.let {
                 TeacherSummary(it.id!!, it.user?.firstName ?: "", it.user?.lastName ?: "", it.user?.email)
             },
-            studentCount = schoolClass.students.size,
-            teacherCount = schoolClass.teachers.size,
+            studentCount = studentCount.toInt(),
+            teacherCount = schoolClass.classTeachers.size,
             createdAt = schoolClass.createdAt,
             updatedAt = schoolClass.updatedAt
         )
     }
 
-    fun toDetailResponse(schoolClass: SchoolClass, schedules: List<ClassSchedule> = emptyList()): SchoolClassDetailResponse {
+    // Accept students list since we removed the direct ManyToMany
+    fun toDetailResponse(schoolClass: SchoolClass, students: List<Student>, schedules: List<ClassSchedule> = emptyList()): SchoolClassDetailResponse {
         return SchoolClassDetailResponse(
             id = schoolClass.id!!,
             name = schoolClass.name,
@@ -45,11 +46,12 @@ object SchoolClassMapper {
             mainTeacher = schoolClass.mainTeacher?.let {
                 TeacherSummary(it.id!!, it.user?.firstName ?: "", it.user?.lastName ?: "", it.user?.email)
             },
-            students = schoolClass.students.map {
+            students = students.map {
                 StudentSummary(it.id!!, it.user?.firstName ?: "", it.user?.lastName ?: "", it.studentId)
             },
-            teachers = schoolClass.teachers.map {
-                TeacherSummary(it.id!!, it.user?.firstName ?: "", it.user?.lastName ?: "", it.user?.email)
+            teachers = schoolClass.classTeachers.map { ct -> // Use classTeachers
+                val teacher = ct.teacher
+                TeacherSummary(teacher?.id!!, teacher.user?.firstName ?: "", teacher.user?.lastName ?: "", teacher.user?.email)
             },
             schedules = schedules.map { toScheduleResponse(it) },
             createdAt = schoolClass.createdAt,
@@ -60,7 +62,7 @@ object SchoolClassMapper {
     fun toScheduleResponse(schedule: ClassSchedule): ClassScheduleResponse {
         return ClassScheduleResponse(
             id = schedule.id!!,
-            classId = schedule.schoolClass?.id!!, // This was likely missing
+            classId = schedule.schoolClass?.id!!,
             dayOfWeek = schedule.dayOfWeek!!,
             startTime = schedule.startTime!!,
             endTime = schedule.endTime!!,

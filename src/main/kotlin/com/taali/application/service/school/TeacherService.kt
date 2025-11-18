@@ -62,7 +62,7 @@ class TeacherService {
             classes = classAssignments.map { assignment ->
                 val schoolClass = assignment.schoolClass
                 val studentCount = if (schoolClass != null) {
-                    Student.count("schoolClass", schoolClass)
+                    Student.count("schoolClass.id", schoolClass.id!!)
                 } else 0
                 TeacherClassResponse(
                     classId = assignment.schoolClass?.id ?: 0,
@@ -71,8 +71,7 @@ class TeacherService {
                     isMainTeacher = assignment.isMainTeacher,
                     studentCount = studentCount
                 )
-            }
-        )
+            })
     }
 
     fun getTeacherClasses(userId: Long): List<Any> {
@@ -83,7 +82,7 @@ class TeacherService {
         return classAssignments.map { classTeacher ->
             val schoolClass = classTeacher.schoolClass
             val studentCount = if (schoolClass != null) {
-                Student.count("schoolClass", schoolClass)
+                Student.count("schoolClass.id", schoolClass.id!!)
             } else 0
             TeacherClassResponse(
                 classId = classTeacher.schoolClass?.id ?: 0,
@@ -95,17 +94,19 @@ class TeacherService {
         }
     }
 
-    // NEW DASHBOARD METHODS USING PROPER SCHEDULE SERVICE
-
+    @Transactional
     fun getTeacherDashboardStats(teacherId: Long): TeacherDashboardStats {
         val teacher = Teacher.findById(teacherId) ?: throw IllegalArgumentException("Teacher not found")
 
         // Get teacher's class assignments using ClassTeacher
         val classAssignments = ClassTeacher.findByTeacher(teacherId)
         val teacherClasses = classAssignments.mapNotNull { it.schoolClass }
+        val classIds = teacherClasses.mapNotNull { it.id }
 
         // Calculate total students across all classes
-        val totalStudents = teacherClasses.flatMap { it.students }.distinct().size
+        val totalStudents = if (classIds.isNotEmpty()) {
+            Student.count("schoolClass.id in ?1", classIds)
+        } else 0
 
         // Calculate total classes
         val totalClasses = teacherClasses.size
@@ -128,11 +129,14 @@ class TeacherService {
         )
     }
 
+    @Transactional
     fun getTeacherClassesWithDetails(teacherId: Long): List<TeacherClassDetail> {
         val classAssignments = ClassTeacher.findByTeacher(teacherId)
 
         return classAssignments.mapNotNull { classTeacher ->
             val schoolClass = classTeacher.schoolClass ?: return@mapNotNull null
+
+            val studentCount = Student.count("schoolClass.id", schoolClass.id!!)
 
             // Get all schedules for this class
             val schedules = scheduleService.getSchedulesByClass(schoolClass.id!!)
@@ -145,13 +149,14 @@ class TeacherService {
                 className = schoolClass.name,
                 subject = classTeacher.subject ?: "General",
                 gradeLevel = schoolClass.gradeLevel ?: "N/A",
-                studentCount = schoolClass.students.size,
+                studentCount = studentCount,
                 schedule = scheduleString.ifEmpty { "Schedule not set" },
-                room = getClassRoom(schoolClass, schedules)
+                room = getClassRoom(schoolClass)
             )
         }
     }
 
+    @Transactional
     fun getUpcomingClasses(teacherId: Long): List<UpcomingClass> {
         val classAssignments = ClassTeacher.findByTeacher(teacherId)
         val today = LocalDate.now()
@@ -163,17 +168,15 @@ class TeacherService {
             val todaySchedules = scheduleService.getSchedulesByClassAndDay(schoolClass.id!!, today.dayOfWeek)
 
             todaySchedules.map { schedule ->
+                val studentCount = Student.count("schoolClass.id", schoolClass.id!!)
                 UpcomingClass(
                     id = schoolClass.id!!,
                     className = schoolClass.name,
                     subject = classTeacher.subject ?: schedule.subjectName,
                     startTime = LocalDateTime.of(today, schedule.startTime),
                     endTime = LocalDateTime.of(today, schedule.endTime),
-                    room = schedule.roomNumber ?: getClassRoom(
-                        schoolClass,
-                        listOf(schedule)
-                    ), // Fixed: Use helper method
-                    studentCount = schoolClass.students.size
+                    room = schedule.roomNumber,
+                    studentCount = studentCount
                 )
             }
         }.sortedBy { it.startTime }
@@ -191,24 +194,19 @@ class TeacherService {
         return classAssignments.take(3).mapIndexed { index, classTeacher ->
             val schoolClass = classTeacher.schoolClass
             TeacherActivity(
-                id = (index + 1).toLong(),
-                type = when (index) {
+                id = (index + 1).toLong(), type = when (index) {
                     0 -> "attendance"
                     1 -> "assignment"
                     else -> "grading"
-                },
-                title = when (index) {
+                }, title = when (index) {
                     0 -> "Attendance Taken"
                     1 -> "Assignment Created"
                     else -> "Grades Updated"
-                },
-                description = when (index) {
+                }, description = when (index) {
                     0 -> "Marked attendance for ${schoolClass?.name ?: "class"}"
                     1 -> "Created new homework assignment"
                     else -> "Updated grades for ${classTeacher.subject ?: "subject"} exam"
-                },
-                timestamp = LocalDateTime.now().minusHours((index + 1).toLong() * 2),
-                classId = schoolClass?.id
+                }, timestamp = LocalDateTime.now().minusHours((index + 1).toLong() * 2), classId = schoolClass?.id
             )
         }
     }
@@ -219,38 +217,14 @@ class TeacherService {
         return 85.5
     }
 
-    // HELPER METHOD TO GET ROOM INFORMATION
-    private fun getClassRoom(
-        schoolClass: SchoolClass,
-        schedules: List<com.taali.api.dto.school.response.ClassScheduleResponse>
-    ): String {
-        // Try to get room from schedules first
-        val scheduleRoom = schedules.firstOrNull()?.roomNumber
-        if (!scheduleRoom.isNullOrBlank()) {
-            return scheduleRoom
-        }
-
-        // Fallback: check if SchoolClass has any room-related property
+    // Simplified helper method
+    private fun getClassRoom(schoolClass: SchoolClass): String {
+        // Check if SchoolClass entity has a roomNumber field
         return try {
-            // Try common room property names
-            when {
-                // If SchoolClass has a roomNumber property
-                schoolClass::class.members.any { it.name == "roomNumber" } -> {
-                    schoolClass.javaClass.getMethod("getRoomNumber").invoke(schoolClass) as? String
-                        ?: "Room not assigned"
-                }
-                // If SchoolClass has a room property
-                schoolClass::class.members.any { it.name == "room" } -> {
-                    schoolClass.javaClass.getMethod("getRoom").invoke(schoolClass) as? String ?: "Room not assigned"
-                }
-                // If SchoolClass has a location property
-                schoolClass::class.members.any { it.name == "location" } -> {
-                    schoolClass.javaClass.getMethod("getLocation").invoke(schoolClass) as? String ?: "Room not assigned"
-                }
-
-                else -> "Room not assigned"
-            }
-        } catch (e: Exception) {
+            val field = schoolClass.javaClass.getDeclaredField("roomNumber")
+            field.isAccessible = true
+            (field.get(schoolClass) as? String) ?: "Room not assigned"
+        } catch (e: NoSuchFieldException) {
             "Room not assigned"
         }
     }
@@ -310,9 +284,7 @@ class TeacherService {
 
     fun getTeachersBySubject(schoolId: Long, subject: String): List<Teacher> {
         return Teacher.find(
-            "user.school.id = ?1 and specializations like ?2",
-            schoolId,
-            "%$subject%"
+            "user.school.id = ?1 and specializations like ?2", schoolId, "%$subject%"
         ).list()
     }
 

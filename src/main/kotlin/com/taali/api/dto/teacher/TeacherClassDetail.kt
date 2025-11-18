@@ -5,7 +5,7 @@ data class TeacherClassDetail(
     val className: String,
     val subject: String,
     val gradeLevel: String,
-    val studentCount: Int,
+    val studentCount: Long,
     val schedule: String,
     val room: String
 )

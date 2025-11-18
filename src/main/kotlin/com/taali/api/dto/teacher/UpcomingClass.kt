@@ -8,6 +8,6 @@ data class UpcomingClass(
     val subject: String,
     val startTime: LocalDateTime,
     val endTime: LocalDateTime,
-    val room: String,
-    val studentCount: Int
+    val room: String?,
+    val studentCount: Long
 )

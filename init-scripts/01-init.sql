@@ -351,6 +351,8 @@ CREATE INDEX idx_class_teachers_teacher ON class_teachers(teacher_id);
 CREATE INDEX idx_school_type_relations_school ON school_type_relations(school_id);
 CREATE INDEX idx_school_type_relations_type ON school_type_relations(school_type_id);
 CREATE INDEX idx_lessons_grade_level ON lessons(grade_level);
+CREATE INDEX idx_timestamps_school ON class_timestamps(school_id);
+CREATE INDEX idx_timestamps_order ON class_timestamps(order_index);
 
 -- =================================================
 -- Initial Data

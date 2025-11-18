@@ -18,7 +18,6 @@ class SchoolClassService {
         val foundSchool = School.find("id", request.schoolId).firstResult()
             ?: throw IllegalArgumentException("School not found with id: ${request.schoolId}")
 
-        // Check if class name already exists
         val existingClass = SchoolClass.find(
             "name = ?1 and school.id = ?2 and academicYear = ?3",
             request.name, request.schoolId, request.academicYear
@@ -28,7 +27,6 @@ class SchoolClassService {
             throw IllegalArgumentException("Class with name '${request.name}' already exists for this academic year")
         }
 
-        // Create and persist the SchoolClass FIRST
         val schoolClass = SchoolClass().apply {
             name = request.name
             gradeLevel = request.gradeLevel
@@ -37,27 +35,26 @@ class SchoolClassService {
             school = foundSchool
         }
 
-        // PERSIST THE SCHOOL CLASS FIRST to get an ID
         schoolClass.persist()
 
-        // FLUSH to ensure the class is saved and has an ID
-        SchoolClass.flush()
-
-        // NOW handle teacher assignments - but use a separate transaction or ensure proper persistence
         if (request.mainTeacherId != null || request.teacherIds.isNotEmpty()) {
             assignTeachersToClass(schoolClass.id!!, request.teacherIds, request.mainTeacherId)
         }
 
-        // Add students (if this relationship works)
+        // Add students via Student.schoolClass
         if (request.studentIds.isNotEmpty()) {
             val students = Student.list("id in ?1", request.studentIds)
             if (students.size != request.studentIds.size) {
                 throw IllegalArgumentException("Some students not found")
             }
-            schoolClass.students.addAll(students)
+            students.forEach { student ->
+                student.schoolClass = schoolClass
+                student.persist()
+            }
         }
 
-        return SchoolClassMapper.toResponse(schoolClass)
+        val studentCount = Student.count("schoolClass.id", schoolClass.id!!)
+        return SchoolClassMapper.toResponse(schoolClass, studentCount)
     }
 
     @Transactional
@@ -65,59 +62,82 @@ class SchoolClassService {
         val schoolClass = SchoolClass.findById(classId)
             ?: throw IllegalArgumentException("Class not found with id: $classId")
 
-        // Add main teacher if provided
         mainTeacherId?.let { teacherId ->
             val teacher = Teacher.findById(teacherId)
                 ?: throw IllegalArgumentException("Teacher not found with id: $teacherId")
 
             val mainClassTeacher = ClassTeacher().apply {
                 this.teacher = teacher
-                this.schoolClass = schoolClass // This is now a managed entity with ID
+                this.schoolClass = schoolClass
                 this.subject = teacher.specializations.firstOrNull() ?: "General"
                 this.isMainTeacher = true
-                this.createdAt = LocalDateTime.now()
-                this.updatedAt = LocalDateTime.now()
+                // createdAt/updatedAt handled by AuditableEntity
             }
             mainClassTeacher.persist()
         }
 
-        // Add other teachers
         teacherIds.forEach { teacherId ->
-            // Skip if this is the main teacher (already added)
             if (teacherId != mainTeacherId) {
                 val teacher = Teacher.findById(teacherId)
                     ?: throw IllegalArgumentException("Teacher not found with id: $teacherId")
 
                 val classTeacher = ClassTeacher().apply {
                     this.teacher = teacher
-                    this.schoolClass = schoolClass // This is now a managed entity with ID
+                    this.schoolClass = schoolClass
                     this.subject = teacher.specializations.firstOrNull() ?: "General"
                     this.isMainTeacher = false
-                    this.createdAt = LocalDateTime.now()
-                    this.updatedAt = LocalDateTime.now()
+                    // createdAt/updatedAt handled by AuditableEntity
                 }
                 classTeacher.persist()
             }
         }
     }
 
+    @Transactional
     fun getClassById(id: Long): SchoolClassDetailResponse {
         val schoolClass = SchoolClass.find("id", id).firstResult()
             ?: throw IllegalArgumentException("Class not found with id: $id")
 
+        val students = Student.list("schoolClass.id", id)
         val schedules = ClassSchedule.find("schoolClass.id", id).list()
-        return SchoolClassMapper.toDetailResponse(schoolClass, schedules)
+        return SchoolClassMapper.toDetailResponse(schoolClass, students, schedules)
     }
 
+    @Transactional
     fun getClassesBySchool(schoolId: Long): List<SchoolClassResponse> {
-        return SchoolClass.find("school.id", schoolId).list().map {
-            SchoolClassMapper.toResponse(it)
+        val classes = SchoolClass.find(
+            """select distinct sc from SchoolClass sc 
+           left join fetch sc.mainTeacher mt
+           left join fetch mt.user u
+           left join fetch sc.school s
+           where sc.school.id = ?1""",
+            schoolId
+        ).list()
+
+        val classIds = classes.mapNotNull { it.id }
+        val studentCounts = if (classIds.isNotEmpty()) {
+            Student.find(
+                "select schoolClass.id, count(*) from Student where schoolClass.id in ?1 group by schoolClass.id",
+                classIds
+            ).list() as List<Array<Any>>
+        } else {
+            emptyList()
+        }
+
+        val countMap = studentCounts.associate {
+            (it[0] as Long) to (it[1] as Long)
+        }
+
+        return classes.map { sc ->
+            SchoolClassMapper.toResponse(sc, countMap[sc.id] ?: 0)
         }
     }
 
+    @Transactional
     fun getActiveClassesBySchool(schoolId: Long): List<SchoolClassResponse> {
         return SchoolClass.find("school.id = ?1 and isActive = ?2", schoolId, true).list().map {
-            SchoolClassMapper.toResponse(it)
+            val count = Student.count("schoolClass.id", it.id!!)
+            SchoolClassMapper.toResponse(it, count)
         }
     }
 
@@ -132,35 +152,38 @@ class SchoolClassService {
         request.capacity?.let { schoolClass.capacity = it }
         request.isActive?.let { schoolClass.isActive = it }
 
-        // Update main teacher
         request.mainTeacherId?.let { teacherId ->
             val teacher = Teacher.find("id", teacherId).firstResult()
                 ?: throw IllegalArgumentException("Teacher not found with id: $teacherId")
             schoolClass.mainTeacher = teacher
         }
 
-        // Update students if provided
+        // Update students
         request.studentIds?.let { studentIds ->
-            val students = Student.list("id in ?1", studentIds)
-            if (students.size != studentIds.size) {
-                throw IllegalArgumentException("Some students not found")
+            Student.update("schoolClass = null where schoolClass.id = ?1", id)
+            if (studentIds.isNotEmpty()) {
+                val updatedCount = Student.update(
+                    "schoolClass = ?1 where id in ?2",
+                    schoolClass,
+                    studentIds
+                )
+                if (updatedCount.toLong() != studentIds.size.toLong()) {
+                    throw IllegalArgumentException("Some students not found")
+                }
             }
-            schoolClass.students.clear()
-            schoolClass.students.addAll(students)
         }
 
-        // Update teachers if provided
+        // Update teachers
         request.teacherIds?.let { teacherIds ->
-            val teachers = Teacher.list("id in ?1", teacherIds)
-            if (teachers.size != teacherIds.size) {
-                throw IllegalArgumentException("Some teachers not found")
+            ClassTeacher.delete("schoolClass.id = ?1", id)
+            if (teacherIds.isNotEmpty()) {
+                assignTeachersToClass(id, teacherIds, request.mainTeacherId)
             }
-            schoolClass.teachers.clear()
-            schoolClass.teachers.addAll(teachers)
         }
 
         schoolClass.persist()
-        return SchoolClassMapper.toResponse(schoolClass)
+        val count = Student.count("schoolClass.id", id)
+        return SchoolClassMapper.toResponse(schoolClass, count)
     }
 
     @Transactional
@@ -171,14 +194,16 @@ class SchoolClassService {
         val student = Student.find("id", studentId).firstResult()
             ?: throw IllegalArgumentException("Student not found with id: $studentId")
 
-        if (schoolClass.students.size >= schoolClass.capacity) {
+        val currentCount = Student.count("schoolClass.id", classId)
+        if (currentCount >= schoolClass.capacity) {
             throw IllegalArgumentException("Class has reached maximum capacity")
         }
 
-        schoolClass.students.add(student)
-        schoolClass.persist()
+        student.schoolClass = schoolClass
+        student.persist()
 
-        return SchoolClassMapper.toResponse(schoolClass)
+        val newCount = Student.count("schoolClass.id", classId)
+        return SchoolClassMapper.toResponse(schoolClass, newCount)
     }
 
     @Transactional
@@ -189,10 +214,11 @@ class SchoolClassService {
         val student = Student.find("id", studentId).firstResult()
             ?: throw IllegalArgumentException("Student not found with id: $studentId")
 
-        schoolClass.students.remove(student)
-        schoolClass.persist()
+        student.schoolClass = null
+        student.persist()
 
-        return SchoolClassMapper.toResponse(schoolClass)
+        val newCount = Student.count("schoolClass.id", classId)
+        return SchoolClassMapper.toResponse(schoolClass, newCount)
     }
 
     @Transactional
@@ -200,15 +226,9 @@ class SchoolClassService {
         val schoolClass = SchoolClass.find("id", id).firstResult()
             ?: throw IllegalArgumentException("Class not found with id: $id")
 
-        // First delete schedules
-        ClassSchedule.find("schoolClass.id", id).list().forEach { it.delete() }
-
-        // Clear relationships before deletion
-        schoolClass.students.clear()
-        schoolClass.teachers.clear()
-        schoolClass.persist()
-
-        // Then delete the class
+        ClassSchedule.delete("schoolClass.id", id)
+        Student.update("schoolClass = null where schoolClass.id = ?1", id)
+        ClassTeacher.delete("schoolClass.id", id)
         schoolClass.delete()
     }
 }
