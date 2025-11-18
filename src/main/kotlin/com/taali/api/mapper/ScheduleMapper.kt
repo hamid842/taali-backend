@@ -29,7 +29,9 @@ object ScheduleMapper {
             name = lesson.name,
             nameEn = lesson.nameEn,
             gradeLevel = lesson.gradeLevel,
-            color = lesson.color
+            color = lesson.color,
+            createdAt = lesson.createdAt,
+            updatedAt = lesson.updatedAt
         )
     }
 }

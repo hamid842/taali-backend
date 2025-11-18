@@ -28,5 +28,9 @@ class Lesson : AuditableEntity() {
         fun findByNameAndGradeLevel(name: String, gradeLevel: String): Lesson? {
             return find("name = ?1 and gradeLevel = ?2", name, gradeLevel).firstResult()
         }
+
+        fun findByPeriod(period: String): List<Lesson> {
+            return find("gradeLevel LIKE ?1", "$period%").list()
+        }
     }
 }

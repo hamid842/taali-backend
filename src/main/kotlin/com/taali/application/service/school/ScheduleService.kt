@@ -7,12 +7,22 @@ import com.taali.api.dto.school.response.LessonResponse
 import com.taali.api.mapper.ScheduleMapper
 import com.taali.domain.model.school.*
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
+import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
+import org.jboss.logging.Logger
 import java.time.DayOfWeek
 
 @ApplicationScoped
 class ScheduleService {
 
+    @Inject
+    lateinit var entityManager: EntityManager
+
+    private val logger: Logger = Logger.getLogger(ScheduleService::class.java)
+
+    // Existing schedule methods...
     @Transactional
     fun createSchedule(request: CreateClassScheduleRequest): ClassScheduleResponse {
         // Validate class exists
@@ -102,15 +112,93 @@ class ScheduleService {
         schedule.delete()
     }
 
-    fun getLessonsByGradeLevel(gradeLevel: String): List<LessonResponse> {
-        return Lesson.findByGradeLevel(gradeLevel).map { ScheduleMapper.toLessonResponse(it) }
+    fun getTeacherSchedule(teacherId: Long): List<ClassScheduleResponse> {
+        return ClassSchedule.findByTeacher(teacherId).map { ScheduleMapper.toResponse(it) }
     }
 
+    // NEW LESSON MANAGEMENT METHODS
     fun getAllLessons(): List<LessonResponse> {
+        logger.info("Retrieving all lessons")
         return Lesson.listAll().map { ScheduleMapper.toLessonResponse(it) }
     }
 
-    fun getTeacherSchedule(teacherId: Long): List<ClassScheduleResponse> {
-        return ClassSchedule.findByTeacher(teacherId).map { ScheduleMapper.toResponse(it) }
+    fun getLessonsByGradeLevel(gradeLevel: String): List<LessonResponse> {
+        logger.info("Retrieving lessons for grade level: $gradeLevel")
+        return Lesson.findByGradeLevel(gradeLevel).map { ScheduleMapper.toLessonResponse(it) }
+    }
+
+    fun getLessonById(id: Long): LessonResponse {
+        logger.info("Retrieving lesson with ID: $id")
+        val lesson = Lesson.findById(id)
+            ?: throw EntityNotFoundException("Lesson not found with ID: $id")
+        return ScheduleMapper.toLessonResponse(lesson)
+    }
+
+    @Transactional
+    fun createLesson(lesson: Lesson): LessonResponse {
+        logger.info("Creating new lesson: ${lesson.name}")
+
+        // Validate required fields
+        if (lesson.name.isBlank()) {
+            throw IllegalArgumentException("Lesson name is required")
+        }
+        if (lesson.gradeLevel.isBlank()) {
+            throw IllegalArgumentException("Grade level is required")
+        }
+
+        // Check if lesson with same name and grade level already exists
+        val existingLesson = Lesson.findByNameAndGradeLevel(lesson.name, lesson.gradeLevel)
+        if (existingLesson != null) {
+            throw IllegalArgumentException("Lesson with name '${lesson.name}' already exists for grade level '${lesson.gradeLevel}'")
+        }
+
+        lesson.persist()
+        logger.info("Successfully created lesson with ID: ${lesson.id}")
+        return ScheduleMapper.toLessonResponse(lesson)
+    }
+
+    @Transactional
+    fun updateLesson(id: Long, updatedLesson: Lesson): LessonResponse {
+        logger.info("Updating lesson with ID: $id")
+
+        val existingLesson = Lesson.findById(id)
+            ?: throw EntityNotFoundException("Lesson not found with ID: $id")
+
+        // Update fields if provided
+        if (updatedLesson.name.isNotBlank()) {
+            existingLesson.name = updatedLesson.name
+        }
+        if (updatedLesson.nameEn != null) {
+            existingLesson.nameEn = updatedLesson.nameEn
+        }
+        if (updatedLesson.gradeLevel.isNotBlank()) {
+            existingLesson.gradeLevel = updatedLesson.gradeLevel
+        }
+        if (updatedLesson.color != null) {
+            existingLesson.color = updatedLesson.color
+        }
+
+        // Check for duplicate name in the same grade level
+        if (updatedLesson.name.isNotBlank() && updatedLesson.gradeLevel.isNotBlank()) {
+            val duplicateLesson = Lesson.findByNameAndGradeLevel(updatedLesson.name, updatedLesson.gradeLevel)
+            if (duplicateLesson != null && duplicateLesson.id != id) {
+                throw IllegalArgumentException("Lesson with name '${updatedLesson.name}' already exists for grade level '${updatedLesson.gradeLevel}'")
+            }
+        }
+
+        existingLesson.persist()
+        logger.info("Successfully updated lesson with ID: $id")
+        return ScheduleMapper.toLessonResponse(existingLesson)
+    }
+
+    @Transactional
+    fun deleteLesson(id: Long) {
+        logger.info("Deleting lesson with ID: $id")
+
+        val lesson = Lesson.findById(id)
+            ?: throw EntityNotFoundException("Lesson not found with ID: $id")
+
+        lesson.delete()
+        logger.info("Successfully deleted lesson with ID: $id")
     }
 }

@@ -1,4 +1,4 @@
--- 01-init.sql
+﻿-- 01-init.sql
 -- =================================================
 -- Create extensions
 -- =================================================
@@ -12,8 +12,6 @@ DROP TABLE IF EXISTS class_schedules CASCADE;
 DROP TABLE IF EXISTS class_students CASCADE;
 DROP TABLE IF EXISTS class_teachers CASCADE;
 DROP TABLE IF EXISTS school_classes CASCADE;
-DROP TABLE IF EXISTS school_type_relations CASCADE;
-DROP TABLE IF EXISTS school_types CASCADE;
 DROP TABLE IF EXISTS student_parents CASCADE;
 DROP TABLE IF EXISTS menu_item_roles CASCADE;
 DROP TABLE IF EXISTS menu_items CASCADE;
@@ -34,7 +32,6 @@ DROP SEQUENCE IF EXISTS students_seq;
 DROP SEQUENCE IF EXISTS teachers_seq;
 DROP SEQUENCE IF EXISTS parents_seq;
 DROP SEQUENCE IF EXISTS canteens_seq;
-DROP SEQUENCE IF EXISTS school_types_seq;
 DROP SEQUENCE IF EXISTS school_classes_seq;
 DROP SEQUENCE IF EXISTS class_schedules_seq;
 DROP SEQUENCE IF EXISTS lessons_seq;
@@ -54,39 +51,63 @@ CREATE SEQUENCE school_types_seq START 1 INCREMENT 1;
 CREATE SEQUENCE school_classes_seq START 1 INCREMENT 1;
 CREATE SEQUENCE class_schedules_seq START 1 INCREMENT 1;
 CREATE SEQUENCE lessons_seq START 1 INCREMENT 1;
+CREATE SEQUENCE class_timestamps_seq START 1 INCREMENT 1;
+
 
 -- =================================================
 -- Schools Table
 -- =================================================
 CREATE TABLE schools (
     id BIGINT PRIMARY KEY DEFAULT nextval('schools_seq'),
+
     name VARCHAR(255) NOT NULL,
     code VARCHAR(50) UNIQUE NOT NULL,
+
+    image VARCHAR(500),
+    address TEXT,
+    email VARCHAR(255),
+    phone VARCHAR(20),
+
     owner_id BIGINT,
+
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+
+    school_type VARCHAR(20),
+    shift_type VARCHAR(20),
+    educational_level VARCHAR(50),
+    isced_level VARCHAR(50),
+
+    website VARCHAR(500),
+
+    students_capacity INTEGER DEFAULT 0,
+    established_year INTEGER,
+    motto VARCHAR(500),
+
+    total_classrooms INTEGER DEFAULT 0,
+    total_labs INTEGER DEFAULT 0,
+
+    has_transport_facility BOOLEAN DEFAULT false,
+    has_hostel_facility BOOLEAN DEFAULT false,
+    has_cafeteria BOOLEAN DEFAULT false,
+    has_library BOOLEAN DEFAULT false,
+    has_sports_facility BOOLEAN DEFAULT false,
+
+    annual_tuition_fee NUMERIC(10,2),
+    accreditation VARCHAR(255),
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- =================================================
--- School Types Table
+-- School Tags Table
 -- =================================================
-CREATE TABLE school_types (
-    id BIGINT PRIMARY KEY DEFAULT nextval('school_types_seq'),
-    name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- =================================================
--- School Type Relations (Many-to-Many)
--- =================================================
-CREATE TABLE school_type_relations (
-    id BIGINT PRIMARY KEY DEFAULT nextval('schools_seq'),
+CREATE TABLE school_tags (
     school_id BIGINT NOT NULL,
-    school_type_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
-    FOREIGN KEY (school_type_id) REFERENCES school_types(id) ON DELETE CASCADE,
-    UNIQUE (school_id, school_type_id)
+    tag VARCHAR(255) NOT NULL,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
 );
 
 -- =================================================
@@ -206,10 +227,30 @@ CREATE TABLE lessons (
     id BIGINT PRIMARY KEY DEFAULT nextval('lessons_seq'),
     name VARCHAR(255) NOT NULL,
     name_en VARCHAR(255),
-    grade_level VARCHAR(100) NOT NULL,
+    grade_level VARCHAR(50) NOT NULL CHECK (grade_level IN ('PRE_PRIMARY', 'PRIMARY', 'LOWER_SECONDARY', 'UPPER_SECONDARY', 'TERTIARY')),
     color VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =================================================
+-- Class Timestamps Table
+-- =================================================
+CREATE TABLE class_timestamps (
+    id BIGINT PRIMARY KEY DEFAULT nextval('class_timestamps_seq'),
+    school_id BIGINT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    type VARCHAR(50) NOT NULL CHECK (type IN (
+        'REGULAR', 'BREAK', 'LUNCH', 'PRAYER', 'OTHER'
+    )),
+    order_index INTEGER NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
 );
 
 -- =================================================
@@ -247,7 +288,7 @@ CREATE TABLE parents (
 );
 
 -- =================================================
--- Student ↔ Parent many-to-many
+-- Student ? Parent many-to-many
 -- =================================================
 CREATE TABLE student_parents (
     student_id BIGINT NOT NULL,
@@ -348,8 +389,6 @@ CREATE INDEX idx_class_students_class ON class_students(class_id);
 CREATE INDEX idx_class_students_student ON class_students(student_id);
 CREATE INDEX idx_class_teachers_class ON class_teachers(class_id);
 CREATE INDEX idx_class_teachers_teacher ON class_teachers(teacher_id);
-CREATE INDEX idx_school_type_relations_school ON school_type_relations(school_id);
-CREATE INDEX idx_school_type_relations_type ON school_type_relations(school_type_id);
 CREATE INDEX idx_lessons_grade_level ON lessons(grade_level);
 CREATE INDEX idx_timestamps_school ON class_timestamps(school_id);
 CREATE INDEX idx_timestamps_order ON class_timestamps(order_index);
@@ -358,137 +397,58 @@ CREATE INDEX idx_timestamps_order ON class_timestamps(order_index);
 -- Initial Data
 -- =================================================
 
--- Insert School Types for Iran
-INSERT INTO school_types (id, name) VALUES
-(1, 'مهد کودک'),
-(2, 'پیش دبستانی'),
-(3, 'ابتدایی دوره اول'),
-(4, 'ابتدایی دوره دوم'),
-(5, 'متوسطه دوره اول'),
-(6, 'متوسطه دوره دوم')
-ON CONFLICT (id) DO NOTHING;
+-- =================================================
+-- Insert default lessons using IscedLevel enum
+-- Auto-generated IDs
+-- =================================================
+INSERT INTO lessons (name, name_en, grade_level, color) VALUES
+-- PRE_PRIMARY
+('ریاضی', 'Mathematics', 'PRE_PRIMARY', 'blue'),
+('علوم', 'Science', 'PRE_PRIMARY', 'green'),
+('هنر', 'Art', 'PRE_PRIMARY', 'pink'),
+('ورزش', 'Physical Education', 'PRE_PRIMARY', 'orange'),
+('ادبیات', 'Literature', 'PRE_PRIMARY', 'purple'),
 
--- Insert default lessons for different grade levels
-INSERT INTO lessons (id, name, name_en, grade_level, color) VALUES
--- Kindergarten
-(1, 'ریاضی', 'Mathematics', 'مهد کودک', 'blue'),
-(2, 'علوم', 'Science', 'مهد کودک', 'green'),
-(3, 'هنر', 'Art', 'مهد کودک', 'pink'),
-(4, 'ورزش', 'Physical Education', 'مهد کودک', 'orange'),
+-- PRIMARY
+('ریاضی', 'Mathematics', 'PRIMARY', 'blue'),
+('علوم', 'Science', 'PRIMARY', 'green'),
+('ادبیات', 'Literature', 'PRIMARY', 'purple'),
+('هدیه های آسمانی', 'Religion', 'PRIMARY', 'indigo'),
+('هنر', 'Art', 'PRIMARY', 'pink'),
+('ورزش', 'Physical Education', 'PRIMARY', 'orange'),
+('مطالعات اجتماعی', 'Social Studies', 'PRIMARY', 'amber'),
 
--- Preschool
-(5, 'ریاضی', 'Mathematics', 'پیش دبستانی', 'blue'),
-(6, 'علوم', 'Science', 'پیش دبستانی', 'green'),
-(7, 'ادبیات', 'Literature', 'پیش دبستانی', 'purple'),
-(8, 'هنر', 'Art', 'پیش دبستانی', 'pink'),
-(9, 'ورزش', 'Physical Education', 'پیش دبستانی', 'orange'),
+-- LOWER_SECONDARY
+('ریاضی', 'Mathematics', 'LOWER_SECONDARY', 'blue'),
+('علوم', 'Science', 'LOWER_SECONDARY', 'green'),
+('ادبیات فارسی', 'Persian Literature', 'LOWER_SECONDARY', 'purple'),
+('عربی', 'Arabic', 'LOWER_SECONDARY', 'red'),
+('انگلیسی', 'English', 'LOWER_SECONDARY', 'yellow'),
+('مطالعات اجتماعی', 'Social Studies', 'LOWER_SECONDARY', 'amber'),
+('پیام های آسمانی', 'Religion', 'LOWER_SECONDARY', 'indigo'),
+('هنر', 'Art', 'LOWER_SECONDARY', 'pink'),
+('ورزش', 'Physical Education', 'LOWER_SECONDARY', 'orange'),
 
--- Primary First Period
-(10, 'ریاضی', 'Mathematics', 'ابتدایی دوره اول', 'blue'),
-(11, 'علوم', 'Science', 'ابتدایی دوره اول', 'green'),
-(12, 'ادبیات', 'Literature', 'ابتدایی دوره اول', 'purple'),
-(13, 'هدیه های آسمانی', 'Religion', 'ابتدایی دوره اول', 'indigo'),
-(14, 'هنر', 'Art', 'ابتدایی دوره اول', 'pink'),
-(15, 'ورزش', 'Physical Education', 'ابتدایی دوره اول', 'orange'),
+-- UPPER_SECONDARY
+('ریاضی', 'Mathematics', 'UPPER_SECONDARY', 'blue'),
+('فیزیک', 'Physics', 'UPPER_SECONDARY', 'green'),
+('شیمی', 'Chemistry', 'UPPER_SECONDARY', 'teal'),
+('ادبیات فارسی', 'Persian Literature', 'UPPER_SECONDARY', 'purple'),
+('عربی', 'Arabic', 'UPPER_SECONDARY', 'red'),
+('انگلیسی', 'English', 'UPPER_SECONDARY', 'yellow'),
+('دین و زندگی', 'Religion', 'UPPER_SECONDARY', 'indigo'),
+('هنر', 'Art', 'UPPER_SECONDARY', 'pink'),
+('ورزش', 'Physical Education', 'UPPER_SECONDARY', 'orange'),
 
--- Primary Second Period
-(16, 'ریاضی', 'Mathematics', 'ابتدایی دوره دوم', 'blue'),
-(17, 'علوم', 'Science', 'ابتدایی دوره دوم', 'green'),
-(18, 'ادبیات', 'Literature', 'ابتدایی دوره دوم', 'purple'),
-(19, 'هدیه های آسمانی', 'Religion', 'ابتدایی دوره دوم', 'indigo'),
-(20, 'مطالعات اجتماعی', 'Social Studies', 'ابتدایی دوره دوم', 'amber'),
-(21, 'هنر', 'Art', 'ابتدایی دوره دوم', 'pink'),
-(22, 'ورزش', 'Physical Education', 'ابتدایی دوره دوم', 'orange'),
+-- TERTIARY
+('ریاضی', 'Mathematics', 'TERTIARY', 'blue'),
+('فیزیک', 'Physics', 'TERTIARY', 'green'),
+('شیمی', 'Chemistry', 'TERTIARY', 'teal'),
+('ادبیات', 'Literature', 'TERTIARY', 'purple'),
+('تاریخ', 'History', 'TERTIARY', 'amber'),
+('علوم اجتماعی', 'Social Sciences', 'TERTIARY', 'indigo'),
+('اقتصاد', 'Economics', 'TERTIARY', 'yellow'),
+('زبان انگلیسی', 'English Language', 'TERTIARY', 'pink'),
+('هنر', 'Art', 'TERTIARY', 'red'),
+('ورزش', 'Physical Education', 'TERTIARY', 'orange');
 
--- Secondary First Period
-(23, 'ریاضی', 'Mathematics', 'متوسطه دوره اول', 'blue'),
-(24, 'علوم', 'Science', 'متوسطه دوره اول', 'green'),
-(25, 'ادبیات فارسی', 'Persian Literature', 'متوسطه دوره اول', 'purple'),
-(26, 'عربی', 'Arabic', 'متوسطه دوره اول', 'red'),
-(27, 'انگلیسی', 'English', 'متوسطه دوره اول', 'yellow'),
-(28, 'مطالعات اجتماعی', 'Social Studies', 'متوسطه دوره اول', 'amber'),
-(29, 'پیام های آسمانی', 'Religion', 'متوسطه دوره اول', 'indigo'),
-(30, 'هنر', 'Art', 'متوسطه دوره اول', 'pink'),
-(31, 'ورزش', 'Physical Education', 'متوسطه دوره اول', 'orange'),
-
--- Secondary Second Period
-(32, 'ریاضی', 'Mathematics', 'متوسطه دوره دوم', 'blue'),
-(33, 'فیزیک', 'Physics', 'متوسطه دوره دوم', 'green'),
-(34, 'شیمی', 'Chemistry', 'متوسطه دوره دوم', 'teal'),
-(35, 'ادبیات فارسی', 'Persian Literature', 'متوسطه دوره دوم', 'purple'),
-(36, 'عربی', 'Arabic', 'متوسطه دوره دوم', 'red'),
-(37, 'انگلیسی', 'English', 'متوسطه دوره دوم', 'yellow'),
-(38, 'دین و زندگی', 'Religion', 'متوسطه دوره دوم', 'indigo'),
-(39, 'هنر', 'Art', 'متوسطه دوره دوم', 'pink'),
-(40, 'ورزش', 'Physical Education', 'متوسطه دوره دوم', 'orange')
-ON CONFLICT (id) DO NOTHING;
-
--- OWNER/Admin
-INSERT INTO users (id, user_id, email, password_hash, first_name, last_name, phone_number, role, status, is_active, email_verified)
-VALUES (1, uuid_generate_v4(), 'admin@taali.com', '$2a$12$LQv3c1yqBWVHxkd0L6kZrOaGFrnsyknKZyFbYh6g.2Iuwm55qRNWS', 'System', 'Admin', '+989120658719', 'OWNER', 'ACTIVE', true, true)
-ON CONFLICT (email) DO NOTHING;
-
--- Default school owned by admin
-INSERT INTO schools (id, name, code, owner_id)
-VALUES (1, 'مدرسه نمونه تهران', 'SCH001', 1)
-ON CONFLICT (id) DO NOTHING;
-
--- Assign all school types to the default school
-INSERT INTO school_type_relations (school_id, school_type_id)
-SELECT 1, id FROM school_types
-ON CONFLICT DO NOTHING;
-
--- Sample teacher user
-INSERT INTO users (id, user_id, email, password_hash, first_name, last_name, phone_number, role, status, is_active, email_verified, school_id)
-VALUES (2, uuid_generate_v4(), 'teacher@taali.com', '$2a$12$LQv3c1yqBWVHxkd0L6kZrOaGFrnsyknKZyFbYh6g.2Iuwm55qRNWS', 'معلم', 'نمونه', '+989123456789', 'TEACHER', 'ACTIVE', true, true, 1)
-ON CONFLICT (email) DO NOTHING;
-
--- Sample teacher
-INSERT INTO teachers (id, user_id, first_name, last_name, email, phone, subject_specialization, qualification, school_id)
-VALUES (1, 2, 'معلم', 'نمونه', 'teacher@taali.com', '+989123456789', 'ریاضی', 'کارشناسی ارشد', 1)
-ON CONFLICT (id) DO NOTHING;
-
--- Sample student user
-INSERT INTO users (id, user_id, email, password_hash, first_name, last_name, phone_number, role, status, is_active, email_verified, school_id)
-VALUES (3, uuid_generate_v4(), 'student@taali.com', '$2a$12$LQv3c1yqBWVHxkd0L6kZrOaGFrnsyknKZyFbYh6g.2Iuwm55qRNWS', 'دانش‌آموز', 'نمونه', '+989123456780', 'STUDENT', 'ACTIVE', true, true, 1)
-ON CONFLICT (email) DO NOTHING;
-
--- Sample student
-INSERT INTO students (id, user_id, first_name, last_name, student_id, id_number, birth_date, gender, school_id, emergency_contact, emergency_phone)
-VALUES (1, 3, 'دانش‌آموز', 'نمونه', 'STU001', '1234567890', '2015-03-15', 'MALE', 1, 'پدر', '+989123456781')
-ON CONFLICT (id) DO NOTHING;
-
--- Sample school class
-INSERT INTO school_classes (id, name, grade_level, academic_year, capacity, school_id, main_teacher_id)
-VALUES (1, 'کلاس اول الف', 'ابتدایی دوره اول', '1403-1404', 30, 1, 1)
-ON CONFLICT (id) DO NOTHING;
-
--- Assign student to class
-INSERT INTO class_students (class_id, student_id)
-VALUES (1, 1)
-ON CONFLICT DO NOTHING;
-
--- Assign teacher to class
-INSERT INTO class_teachers (class_id, teacher_id)
-VALUES (1, 1)
-ON CONFLICT DO NOTHING;
-
--- Sample class schedules
-INSERT INTO class_schedules (id, class_id, day_of_week, start_time, end_time, subject_name, teacher_id, room_number) VALUES
-(1, 1, 'SUNDAY', '08:00', '08:45', 'ریاضی', 1, '۱۰۱'),
-(2, 1, 'SUNDAY', '09:00', '09:45', 'علوم', 1, '۱۰۱'),
-(3, 1, 'MONDAY', '08:00', '08:45', 'ادبیات', 1, '۱۰۱'),
-(4, 1, 'MONDAY', '09:00', '09:45', 'هنر', 1, 'سالن ورزش'),
-(5, 1, 'TUESDAY', '08:00', '08:45', 'ریاضی', 1, '۱۰۱'),
-(6, 1, 'WEDNESDAY', '08:00', '08:45', 'هدیه های آسمانی', 1, '۱۰۱')
-ON CONFLICT (id) DO NOTHING;
-
--- Reset sequences to proper values
-SELECT setval('users_seq', COALESCE((SELECT MAX(id) FROM users), 1));
-SELECT setval('schools_seq', COALESCE((SELECT MAX(id) FROM schools), 1));
-SELECT setval('school_types_seq', COALESCE((SELECT MAX(id) FROM school_types), 1));
-SELECT setval('teachers_seq', COALESCE((SELECT MAX(id) FROM teachers), 1));
-SELECT setval('students_seq', COALESCE((SELECT MAX(id) FROM students), 1));
-SELECT setval('school_classes_seq', COALESCE((SELECT MAX(id) FROM school_classes), 1));
-SELECT setval('class_schedules_seq', COALESCE((SELECT MAX(id) FROM class_schedules), 1));
-SELECT setval('lessons_seq', COALESCE((SELECT MAX(id) FROM lessons), 1));

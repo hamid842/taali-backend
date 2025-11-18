@@ -5,9 +5,11 @@ import com.taali.domain.enum.SchoolStatus
 import com.taali.domain.enum.SchoolType
 import com.taali.domain.enum.ShiftType
 import com.taali.domain.enum.EducationalLevel
+import com.taali.domain.enum.IscedLevel
 import com.taali.domain.model.common.AuditableEntity
 import com.taali.domain.model.user.User
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
+import io.quarkus.panache.common.Parameters
 import jakarta.persistence.*
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.Max
@@ -25,7 +27,6 @@ import kotlin.math.max
     indexes = [
         Index(name = "idx_school_status", columnList = "status"),
         Index(name = "idx_school_type", columnList = "school_type"),
-        Index(name = "idx_school_level", columnList = "educational_level"),
         Index(name = "idx_school_owner", columnList = "owner_id")
     ]
 )
@@ -71,9 +72,24 @@ class School : AuditableEntity() {
     @Column(name = "shift_type", length = 20)
     var shiftType: ShiftType? = null
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+        name = "school_isced_levels",
+        joinColumns = [JoinColumn(name = "school_id")]
+    )
+    @Column(name = "isced_level", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "educational_level", length = 20)
-    var educationalLevel: EducationalLevel? = null
+    var iscedLevels: MutableSet<IscedLevel> = mutableSetOf()
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+        name = "school_educational_levels",
+        joinColumns = [JoinColumn(name = "school_id")]
+    )
+    @Column(name = "educational_level", nullable = false)
+    @Enumerated(EnumType.STRING)
+    var educationalLevels: MutableSet<EducationalLevel> = mutableSetOf()
+
 
     @Column(name = "website", length = 500)
     var website: String? = null
@@ -196,7 +212,29 @@ class School : AuditableEntity() {
         get() = hasSportsFacility
 
     override fun toString(): String =
-        "School(id=$id, name='$name', code='$code', status=$status, type=$schoolType, level=$educationalLevel)"
+        "School(id=$id, name='$name', code='$code', status=$status, type=$schoolType, levels=$educationalLevels)"
+
+    fun mapEducationalLevelsToIsced() {
+        val mapped = educationalLevels.map { level ->
+            when (level) {
+                EducationalLevel.KINDERGARTEN,
+                EducationalLevel.PRESCHOOL -> IscedLevel.PRE_PRIMARY
+
+                EducationalLevel.PRIMARY -> IscedLevel.PRIMARY
+
+                EducationalLevel.MIDDLE_SCHOOL -> IscedLevel.LOWER_SECONDARY
+
+                EducationalLevel.HIGH_SCHOOL,
+                EducationalLevel.VOCATIONAL -> IscedLevel.UPPER_SECONDARY
+
+                EducationalLevel.UNDERGRADUATE,
+                EducationalLevel.POSTGRADUATE -> IscedLevel.TERTIARY
+            }
+        }.toMutableSet()
+
+        iscedLevels = mapped
+    }
+
 
     companion object : PanacheCompanion<School> {
         fun findActive(): List<School> {
@@ -212,11 +250,18 @@ class School : AuditableEntity() {
         }
 
         fun findByEducationalLevel(level: EducationalLevel): List<School> {
-            return find("educationalLevel", level).list()
+            return find(" :level MEMBER OF educationalLevels", Parameters.with("level", level)).list()
+        }
+
+        fun findByIscedLevel(level: IscedLevel): List<School> {
+            return find(" :level MEMBER OF iscedLevels", Parameters.with("level", level)).list()
         }
 
         fun findWithAvailableCapacity(): List<School> {
-            return list("FROM School s WHERE s.status = ?1 AND s.studentsCapacity > 0 AND s.studentsCapacity > (SELECT COUNT(st) FROM Student st WHERE st.user.school = s)", SchoolStatus.ACTIVE)
+            return list(
+                "FROM School s WHERE s.status = ?1 AND s.studentsCapacity > 0 AND s.studentsCapacity > (SELECT COUNT(st) FROM Student st WHERE st.user.school = s)",
+                SchoolStatus.ACTIVE
+            )
         }
     }
 }
