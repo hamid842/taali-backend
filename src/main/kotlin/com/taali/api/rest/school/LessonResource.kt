@@ -35,25 +35,102 @@ class LessonResource {
     }
 
     @GET
-    @Path("/grade-level/{gradeLevel}")
+    @Path("/available-grade-levels/{schoolId}")
     @RolesAllowed("OWNER","SCHOOL_MANAGER","SCHOOL_ADMIN")
-    fun getLessonsByGradeLevel(@PathParam("gradeLevel") gradeLevel: String): Response {
+    fun getAvailableGradeLevels(@PathParam("schoolId") schoolId: Long): Response {
         try {
-            logger.info("Fetching lessons for grade level: $gradeLevel")
-            val lessons = scheduleService.getLessonsByGradeLevel(gradeLevel)
+            logger.info("Fetching available grade levels for school: $schoolId")
+            val gradeLevels = scheduleService.getAvailableGradeLevelsForSchool(schoolId)
+            return Response.ok(gradeLevels).build()
+        } catch (e: Exception) {
+            logger.error("Failed to fetch available grade levels for school: $schoolId", e)
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(mapOf("error" to "Failed to fetch available grade levels: ${e.message}"))
+                .build()
+        }
+    }
+
+    @GET
+    @Path("/grade-level/{gradeLevel}/school/{schoolId}")
+    @RolesAllowed("OWNER","SCHOOL_MANAGER","SCHOOL_ADMIN")
+    fun getLessonsByGradeLevel(
+        @PathParam("gradeLevel") gradeLevel: String,
+        @PathParam("schoolId") schoolId: Long
+    ): Response {
+        try {
+            logger.info("Fetching lessons for grade level: $gradeLevel in school: $schoolId")
+            val lessons = scheduleService.getLessonsByGradeLevel(gradeLevel, schoolId)
             return Response.ok(lessons).build()
         } catch (e: IllegalArgumentException) {
-            logger.warn("Invalid grade level: $gradeLevel")
+            logger.warn("Invalid grade level: $gradeLevel for school: $schoolId")
             return Response.status(Response.Status.BAD_REQUEST).entity(
                 mapOf("error" to e.message)
             ).build()
         } catch (e: Exception) {
-            logger.error("Failed to fetch lessons for grade level: $gradeLevel", e)
+            logger.error("Failed to fetch lessons for grade level: $gradeLevel in school: $schoolId", e)
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity(mapOf("error" to "Failed to fetch lessons: ${e.message}"))
                 .build()
         }
     }
+
+    @GET
+    @Path("/grade-levels/school/{schoolId}")
+    @RolesAllowed("OWNER","SCHOOL_MANAGER","SCHOOL_ADMIN")
+    fun getLessonsByMultipleGradeLevels(
+        @QueryParam("gradeLevels") gradeLevelsParam: String?,
+        @PathParam("schoolId") schoolId: Long
+    ): Response {
+        try {
+            logger.info("Fetching lessons for grade levels: $gradeLevelsParam in school: $schoolId")
+
+            if (gradeLevelsParam.isNullOrBlank()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(mapOf("error" to "gradeLevels parameter is required"))
+                    .build()
+            }
+
+            val gradeLevels = gradeLevelsParam.split(',').map { it.trim() }
+
+            if (gradeLevels.isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(mapOf("error" to "At least one grade level must be provided"))
+                    .build()
+            }
+
+            val lessons = scheduleService.getLessonsByGradeLevels(gradeLevels, schoolId)
+            return Response.ok(lessons).build()
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid grade levels: $gradeLevelsParam for school: $schoolId - ${e.message}")
+            return Response.status(Response.Status.BAD_REQUEST).entity(
+                mapOf("error" to e.message)
+            ).build()
+        } catch (e: Exception) {
+            logger.error("Failed to fetch lessons for grade levels: $gradeLevelsParam in school: $schoolId", e)
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(mapOf("error" to "Failed to fetch lessons: ${e.message}"))
+                .build()
+        }
+    }
+
+    private fun validateGradeLevelForSchool(gradeLevel: String, availableGradeLevels: List<String>): String {
+        val normalized = gradeLevel.trim().uppercase()
+
+        if (normalized.isBlank()) {
+            throw IllegalArgumentException("Grade level cannot be empty")
+        }
+
+        if (!availableGradeLevels.contains(normalized)) {
+            throw IllegalArgumentException(
+                "Invalid grade level: $gradeLevel. " +
+                        "Available grade levels for this school: ${availableGradeLevels.joinToString()}"
+            )
+        }
+
+        return normalized
+    }
+
+
 
     @GET
     @Path("/{id}")

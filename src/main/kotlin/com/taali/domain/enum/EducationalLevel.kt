@@ -2,5 +2,5 @@ package com.taali.domain.enum
 
 enum class EducationalLevel {
     KINDERGARTEN, PRESCHOOL, PRIMARY, MIDDLE_SCHOOL, HIGH_SCHOOL,
-    VOCATIONAL, UNDERGRADUATE, POSTGRADUATE
+    VOCATIONAL
 }

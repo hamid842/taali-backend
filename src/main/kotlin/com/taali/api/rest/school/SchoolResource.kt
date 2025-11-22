@@ -67,7 +67,7 @@ class SchoolResource {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed("OWNER")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER")
     fun updateSchool(@PathParam("id") id: Long, request: UpdateSchoolRequest): Response {
         try {
             val school = schoolService.updateSchool(id, request)
@@ -105,7 +105,7 @@ class SchoolResource {
 
     @PATCH
     @Path("/{id}/logo")
-    @RolesAllowed("OWNER")
+    @RolesAllowed("OWNER", "SCHOOL_MANAGER")
     fun updateSchoolLogo(
         @PathParam("id") id: Long, @QueryParam("imageUrl") imageUrl: String
     ): Response {

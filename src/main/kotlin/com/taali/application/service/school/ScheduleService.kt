@@ -59,6 +59,75 @@ class ScheduleService {
         return ScheduleMapper.toResponse(schedule)
     }
 
+    // GET AVAILABLE GRADE LEVELS FOR SPECIFIC SCHOOL
+    fun getAvailableGradeLevelsForSchool(schoolId: Long): List<String> {
+        logger.info("Retrieving available grade levels for school: $schoolId")
+
+        return try {
+            // Use the repository method you created
+            val lessons = Lesson.find("school_id", schoolId).list()
+            val gradeLevels = lessons.map { it.gradeLevel }.distinct()
+
+            logger.info("Found available grade levels for school $schoolId: $gradeLevels")
+            gradeLevels
+        } catch (e: Exception) {
+            logger.error("Failed to retrieve available grade levels for school: $schoolId", e)
+            emptyList()
+        }
+    }
+
+    // GET LESSONS BY GRADE LEVEL FOR SPECIFIC SCHOOL
+    fun getLessonsByGradeLevel(gradeLevel: String, schoolId: Long): List<LessonResponse> {
+        logger.info("Retrieving lessons for grade level: $gradeLevel in school: $schoolId")
+
+        return try {
+            // Use the repository method you created
+            val lesson = Lesson.findByGradeLevelAndSchoolId(gradeLevel, schoolId)
+            val lessons = if (lesson != null) listOf(lesson) else emptyList()
+
+            lessons.map { ScheduleMapper.toLessonResponse(it) }
+        } catch (e: Exception) {
+            logger.error("Failed to retrieve lessons for grade level: $gradeLevel in school: $schoolId", e)
+            emptyList()
+        }
+    }
+
+    // GET LESSONS BY MULTIPLE GRADE LEVELS FOR SPECIFIC SCHOOL
+    fun getLessonsByGradeLevels(gradeLevels: List<String>, schoolId: Long): List<LessonResponse> {
+        logger.info("Retrieving lessons for grade levels: $gradeLevels in school: $schoolId")
+
+        if (gradeLevels.isEmpty()) {
+            logger.warn("No grade levels provided for filtering")
+            return emptyList()
+        }
+
+        return try {
+            // Use the repository method you created
+            val lessons = Lesson.findByGradeLevelsAndSchoolId(gradeLevels, schoolId)
+            lessons.map { ScheduleMapper.toLessonResponse(it) }
+        } catch (e: Exception) {
+            logger.error("Failed to retrieve lessons for grade levels: $gradeLevels in school: $schoolId", e)
+            emptyList()
+        }
+    }
+
+    // Fix the findAvailableGradeLevelsBySchool method to return List<String>
+    fun getAvailableGradeLevelsForSchoolNative(schoolId: Long): List<String> {
+        logger.info("Retrieving available grade levels for school using native query: $schoolId")
+
+        return try {
+            // Since your repository method returns List<Lesson>, we need to extract gradeLevels
+            val lessons = Lesson.find("school_id", schoolId).list()
+            val gradeLevels = lessons.map { it.gradeLevel }.distinct()
+
+            logger.info("Found available grade levels for school $schoolId: $gradeLevels")
+            gradeLevels
+        } catch (e: Exception) {
+            logger.error("Failed to retrieve available grade levels for school: $schoolId", e)
+            emptyList()
+        }
+    }
+
     fun getSchedulesByClass(classId: Long): List<ClassScheduleResponse> {
         return ClassSchedule.findByClass(classId).map { ScheduleMapper.toResponse(it) }
     }

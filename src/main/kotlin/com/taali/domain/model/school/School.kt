@@ -226,9 +226,6 @@ class School : AuditableEntity() {
 
                 EducationalLevel.HIGH_SCHOOL,
                 EducationalLevel.VOCATIONAL -> IscedLevel.UPPER_SECONDARY
-
-                EducationalLevel.UNDERGRADUATE,
-                EducationalLevel.POSTGRADUATE -> IscedLevel.TERTIARY
             }
         }.toMutableSet()
 

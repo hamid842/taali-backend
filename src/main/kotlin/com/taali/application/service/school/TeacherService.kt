@@ -76,7 +76,6 @@ class TeacherService {
 
     fun getTeacherClasses(userId: Long): List<Any> {
         val teacher = Teacher.findByUser(userId) ?: return emptyList()
-
         val classAssignments = ClassTeacher.findByTeacher(teacher.id!!)
 
         return classAssignments.map { classTeacher ->
@@ -96,10 +95,10 @@ class TeacherService {
 
     @Transactional
     fun getTeacherDashboardStats(teacherId: Long): TeacherDashboardStats {
-        val teacher = Teacher.findById(teacherId) ?: throw IllegalArgumentException("Teacher not found")
+        val teacher = Teacher.findByUser(teacherId) ?: throw IllegalArgumentException("Teacher not found")
 
         // Get teacher's class assignments using ClassTeacher
-        val classAssignments = ClassTeacher.findByTeacher(teacherId)
+        val classAssignments = ClassTeacher.findByTeacher(teacher.id!!)
         val teacherClasses = classAssignments.mapNotNull { it.schoolClass }
         val classIds = teacherClasses.mapNotNull { it.id }
 
@@ -158,7 +157,8 @@ class TeacherService {
 
     @Transactional
     fun getUpcomingClasses(teacherId: Long): List<UpcomingClass> {
-        val classAssignments = ClassTeacher.findByTeacher(teacherId)
+        val teacher = Teacher.findByUser(teacherId) ?: throw IllegalArgumentException("Teacher not found")
+        val classAssignments = ClassTeacher.findByTeacher(teacher.id!!)
         val today = LocalDate.now()
 
         return classAssignments.flatMap { classTeacher ->

@@ -3,6 +3,7 @@ package com.taali.application.service.school
 import com.taali.api.dto.school.*
 import com.taali.api.mapper.toDto
 import com.taali.application.service.user.UserService
+import com.taali.domain.enum.EducationalLevel
 import com.taali.domain.enum.SchoolStatus
 import com.taali.domain.model.school.School
 import com.taali.domain.repository.school.SchoolRepository
@@ -51,7 +52,7 @@ class SchoolService {
             email = request.email
             phone = request.phone
             this.owner = owner
-            status = request.status ?: SchoolStatus.ACTIVE
+            status = request.status
         }
 
         schoolRepository.persist(school)
@@ -74,6 +75,23 @@ class SchoolService {
         request.email?.let { school.email = it }
         request.phone?.let { school.phone = it }
         request.status?.let { school.status = it }
+        request.schoolType?.let { school.schoolType = it }
+        request.shiftType?.let { school.shiftType = it }
+        request.educationalLevels?.let { school.educationalLevels = it as MutableSet<EducationalLevel> }
+        request.studentsCapacity?.let { school.studentsCapacity = it }
+        request.establishedYear?.let { school.establishedYear = it }
+        request.website?.let { school.website = it }
+        request.motto?.let { school.motto = it }
+        request.totalClassrooms?.let { school.totalClassrooms = it }
+        request.totalLabs?.let { school.totalLabs = it }
+        request.hasTransportFacility?.let { school.hasTransportFacility = it }
+        request.hasHostelFacility?.let { school.hasHostelFacility = it }
+        request.hasCafeteria?.let { school.hasCafeteria = it }
+        request.hasLibrary?.let { school.hasLibrary = it }
+        request.hasSportsFacility?.let { school.hasSportsFacility = it }
+        request.annualTuitionFee?.let { school.annualTuitionFee = it }
+        request.accreditation?.let { school.accreditation = it }
+        request.tags?.let { school.tags = it }
 
         schoolRepository.persist(school)
         return school.toDto()

@@ -19,16 +19,4 @@ abstract class AuditableEntity : PanacheEntityBase {
     @UpdateTimestamp
     @Column(name = "updated_at")
     open var updatedAt: LocalDateTime = LocalDateTime.now()
-
-    @PrePersist
-    fun prePersist() {
-        val now = LocalDateTime.now()
-        createdAt = now
-        updatedAt = now
-    }
-
-    @PreUpdate
-    fun preUpdate() {
-        updatedAt = LocalDateTime.now()
-    }
 }

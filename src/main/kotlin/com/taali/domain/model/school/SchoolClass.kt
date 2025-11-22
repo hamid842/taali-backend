@@ -31,24 +31,6 @@ class SchoolClass : AuditableEntity() {
     @JoinColumn(name = "main_teacher_id")
     var mainTeacher: Teacher? = null
 
-    // Many-to-Many with Students
-//    @ManyToMany
-//    @JoinTable(
-//        name = "class_students",
-//        joinColumns = [JoinColumn(name = "class_id")],
-//        inverseJoinColumns = [JoinColumn(name = "student_id")]
-//    )
-//    var students: MutableSet<Student> = mutableSetOf()
-
-//    @ManyToMany
-//    @JoinTable(
-//        name = "class_teachers",
-//        joinColumns = [JoinColumn(name = "class_id")],
-//        inverseJoinColumns = [JoinColumn(name = "teacher_id")]
-//    )
-//    var teachers: MutableSet<Teacher> = mutableSetOf()
-
-    // Add this field to fix the relationship with Teacher.classes
     @OneToMany(mappedBy = "schoolClass", fetch = FetchType.LAZY)
     var classTeachers: MutableSet<ClassTeacher> = mutableSetOf()
 

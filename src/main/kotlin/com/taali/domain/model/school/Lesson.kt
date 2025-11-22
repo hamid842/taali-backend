@@ -20,17 +20,34 @@ class Lesson : AuditableEntity() {
     @Column(name = "color")
     var color: String? = null
 
-    companion object : PanacheCompanion<Lesson> {
-        fun findByGradeLevel(gradeLevel: String): List<Lesson> {
-            return find("gradeLevel", gradeLevel).list()
-        }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "school_id", nullable = false)
+    var school: School? = null
 
+    companion object : PanacheCompanion<Lesson> {
+
+        fun findByGradeLevel(gradeLevel: String): List<Lesson> {
+            return find("gradeLevel = ?1", gradeLevel).list()
+        }
         fun findByNameAndGradeLevel(name: String, gradeLevel: String): Lesson? {
             return find("name = ?1 and gradeLevel = ?2", name, gradeLevel).firstResult()
         }
+        fun findByGradeLevelsAndSchoolId(gradeLevels: List<String>, schoolId: Long): List<Lesson> {
+            return find("gradeLevel in ?1 and school.id = ?2", gradeLevels, schoolId).list()
+        }
 
-        fun findByPeriod(period: String): List<Lesson> {
-            return find("gradeLevel LIKE ?1", "$period%").list()
+        fun findByGradeLevelAndSchoolId(gradeLevel: String, schoolId: Long): Lesson? {
+            return find("gradeLevel = ?1 and school.id = ?2", gradeLevel, schoolId).firstResult()
+        }
+
+        fun findAvailableGradeLevelsBySchool(schoolId: Long): List<Lesson> {
+            val query = """
+            SELECT DISTINCT l.gradeLevel 
+            FROM Lesson l 
+            WHERE l.school_id = ?1 
+            ORDER BY l.gradeLevel
+        """
+            return find(query, schoolId).list()
         }
     }
 }

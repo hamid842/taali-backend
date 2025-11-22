@@ -19,7 +19,7 @@ class MenuResource {
 
     @GET
     @Path("/user")
-    @RolesAllowed("SCHOOL_MANAGER", "OWNER","TEACHER")
+    @RolesAllowed("SCHOOL_MANAGER", "OWNER","TEACHER","PARENT","STUDENT")
     fun getUserMenu(
         @QueryParam("role") role: String,
     ): Response {
