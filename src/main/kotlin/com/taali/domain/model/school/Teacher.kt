@@ -30,6 +30,9 @@ class Teacher : AuditableEntity() {
     @Column(name = "hire_date")
     var hireDate: java.time.LocalDate? = null
 
+    @Column(name = "subject")
+    var subject: String? = null
+
     @OneToMany(mappedBy = "teacher", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     var classAssignments: MutableSet<ClassTeacher> = mutableSetOf()
 

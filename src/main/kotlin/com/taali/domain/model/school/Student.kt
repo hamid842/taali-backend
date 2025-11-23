@@ -1,12 +1,13 @@
 package com.taali.domain.model.school
 
+import com.taali.api.dto.school.StudentDTO
+import com.taali.api.dto.user.UserDto
 import com.taali.domain.enum.Gender
 import com.taali.domain.model.common.AuditableEntity
 import com.taali.domain.model.user.User
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
 import jakarta.persistence.*
 import java.time.LocalDate
-import java.util.UUID
 
 @Entity
 @Table(name = "students")
@@ -76,6 +77,12 @@ class Student : AuditableEntity() {
 
         fun findByUser(userId: Long): Student? {
             return find("user.id", userId).firstResult()
+        }
+
+        fun fromEntity(student: Student): StudentDTO {
+            return StudentDTO(
+                id = student.id, name = student.getFullName(), user = UserDto.fromEntity(student.user)
+            )
         }
     }
 }

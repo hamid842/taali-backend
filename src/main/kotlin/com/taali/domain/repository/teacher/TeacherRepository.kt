@@ -26,4 +26,35 @@ class TeacherRepository : PanacheRepository<Teacher> {
             "%$searchTerm%"
         ).list()
     }
+
+    // NEW: Find teachers by class ID through ClassTeacher relationship
+    fun findByClassId(classId: Long): List<Teacher> {
+        return find(
+            "SELECT DISTINCT t FROM Teacher t JOIN t.classTeachers ct WHERE ct.schoolClass.id = ?1",
+            classId
+        ).list()
+    }
+
+    // NEW: Find teachers by student ID (through student's class)
+    fun findByStudentId(studentId: Long): List<Teacher> {
+        return find(
+            """SELECT DISTINCT t FROM Teacher t 
+               LEFT JOIN t.classTeachers ct 
+               LEFT JOIN ct.schoolClass sc 
+               LEFT JOIN sc.students s 
+               WHERE s.id = ?1""",
+            studentId
+        ).list()
+    }
+
+    // NEW: Find main teachers by student ID (mainTeacher of student's class)
+    fun findMainTeachersByStudentId(studentId: Long): List<Teacher> {
+        return find(
+            """SELECT DISTINCT t FROM Teacher t 
+               JOIN SchoolClass sc ON sc.mainTeacher.id = t.id 
+               JOIN sc.students s 
+               WHERE s.id = ?1""",
+            studentId
+        ).list()
+    }
 }

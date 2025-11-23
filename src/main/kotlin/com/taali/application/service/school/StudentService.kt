@@ -8,28 +8,36 @@ import com.taali.api.dto.school.response.StudentAssignmentResponse
 import com.taali.api.dto.school.response.StudentResponse
 import com.taali.api.dto.shared.PagedResponseDto
 import com.taali.api.dto.shared.PaginationInfoDto
+import com.taali.api.dto.teacher.TeacherDto
 import com.taali.domain.enum.Gender
 import com.taali.domain.enum.UserRole
 import com.taali.domain.model.school.Parent
 import com.taali.domain.model.school.SchoolClass
 import com.taali.domain.model.school.Student
+import com.taali.domain.model.school.Teacher
 import com.taali.domain.model.user.User
+import com.taali.domain.repository.student.StudentRepository
+import com.taali.domain.repository.teacher.TeacherRepository
 import io.quarkus.panache.common.Page
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import jakarta.ws.rs.NotFoundException
 import java.time.LocalDate
 import java.time.Period
 
 @ApplicationScoped
 class StudentService {
 
+    @Inject
+    lateinit var teacherRepository: TeacherRepository
+
+    @Inject
+    lateinit var studentRepository: StudentRepository
+
+
     fun getStudentsBySchool(
-        schoolId: Long,
-        page: Int,
-        size: Int,
-        search: String? = null,
-        gradeLevel: String? = null,
-        classId: Long? = null
+        schoolId: Long, page: Int, size: Int, search: String? = null, gradeLevel: String? = null, classId: Long? = null
     ): PagedResponseDto<StudentResponse> {
 
         var query = "user.school.id = ?1"
@@ -56,8 +64,7 @@ class StudentService {
         }
 
         // Get paginated results with proper ordering
-        val studentPage = Student.find(query, *params.toTypedArray())
-            .page(Page.of(page, size))
+        val studentPage = Student.find(query, *params.toTypedArray()).page(Page.of(page, size))
 
         val students = studentPage.list()
 
@@ -98,8 +105,7 @@ class StudentService {
         }
 
         return PagedResponseDto(
-            items = studentResponses,
-            pagination = PaginationInfoDto(
+            items = studentResponses, pagination = PaginationInfoDto(
                 page = page,
                 size = size,
                 totalElements = studentPage.count(),
@@ -116,6 +122,60 @@ class StudentService {
         return Period.between(birthDate, today).years
     }
 
+    fun getTeachersByStudent(studentId: Long): List<TeacherDto> {
+        val student = studentRepository.findByIdWithClassAndTeachers(studentId)
+            ?: throw NotFoundException("Student not found with id: $studentId")
+
+        val teachers = mutableSetOf<Teacher>()
+
+        // Get teachers from student's class if exists
+        if (student.schoolClass != null) {
+            // Get main teacher of the class
+            student.schoolClass?.mainTeacher?.let { teachers.add(it) }
+
+            // Get all class teachers
+            val classTeachers = teacherRepository.findByClassId(student.schoolClass!!.id!!)
+            teachers.addAll(classTeachers)
+        }
+
+        // If no teachers found from class, get all active teachers from the school
+        if (teachers.isEmpty()) {
+            val schoolTeachers = teacherRepository.findActiveBySchool(
+                student.user?.school?.id ?: throw NotFoundException("Student school not found")
+            )
+            teachers.addAll(schoolTeachers)
+        }
+
+        return teachers.map { teacher ->
+            TeacherDto(
+                id = teacher.id!!,
+                firstName = teacher.user?.firstName ?: "",
+                lastName = teacher.user?.lastName ?: "",
+                subject = teacher.subject ?: "General",
+                role = teacher.user?.role,
+                email = teacher.user?.email,
+                phone = teacher.user?.phoneNumber
+            )
+        }.distinctBy { it.id } // Remove duplicates
+    }
+
+    // ALTERNATIVE: Simplified version using the repository method directly
+    fun getTeachersByStudentSimple(studentId: Long): List<TeacherDto> {
+        val teachers = teacherRepository.findByStudentId(studentId)
+
+        return teachers.map { teacher ->
+            TeacherDto(
+                id = teacher.id!!,
+                firstName = teacher.user?.firstName ?: "",
+                lastName = teacher.user?.lastName ?: "",
+                subject = teacher.subject ?: "General",
+                role = teacher.user?.role,
+                email = teacher.user?.email,
+                phone = teacher.user?.phoneNumber
+            )
+        }
+    }
+
     // Get unique grade levels for filter dropdown
     fun getGradeLevelsBySchool(schoolId: Long): List<Student> {
         return Student.find(
@@ -126,13 +186,9 @@ class StudentService {
 
     // Get classes for filter dropdown
     fun getClassesBySchool(schoolId: Long): List<ClassResponse> {
-        return SchoolClass.find("school.id = ?1 ORDER BY name", schoolId)
-            .list()
-            .map { schoolClass ->
+        return SchoolClass.find("school.id = ?1 ORDER BY name", schoolId).list().map { schoolClass ->
                 ClassResponse(
-                    id = schoolClass.id!!,
-                    name = schoolClass.name,
-                    gradeLevel = schoolClass.gradeLevel
+                    id = schoolClass.id!!, name = schoolClass.name, gradeLevel = schoolClass.gradeLevel
                 )
             }
     }

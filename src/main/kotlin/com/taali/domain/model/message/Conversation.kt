@@ -42,6 +42,16 @@ class Conversation : AuditableEntity() {
     @Column(name = "unread_count_receiver", nullable = false)
     var unreadCountReceiver: Int = 0
 
+    // Add these computed properties for easier DTO conversion
+    val unreadCount: Int
+        get() = unreadCountInitiator + unreadCountReceiver
+
+    val messageCount: Int
+        get() = messages.size
+
+    val lastMessage: Message?
+        get() = messages.maxByOrNull { it.createdAt }
+
     // Relationships
     @OneToMany(mappedBy = "conversation", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     var messages: MutableList<Message> = mutableListOf()
@@ -69,7 +79,7 @@ class Conversation : AuditableEntity() {
         }
     }
 
-    fun getOtherParticipant(userId: Long): User? {
+    fun getOtherParticipant(userId: Long?): User? {
         return when (userId) {
             initiator.id -> receiver
             receiver.id -> initiator
@@ -77,8 +87,28 @@ class Conversation : AuditableEntity() {
         }
     }
 
+    // Add this method to safely initialize lazy properties for DTO conversion
+    fun initializeForDTO() {
+        // Force initialization of lazy properties that will be used in DTOs
+        try {
+            // Access basic properties to ensure they're loaded
+            initiator.id
+            initiator.firstName
+            receiver.id
+            receiver.firstName
+            student?.id
+            student?.getFullName()
+            // Access messages collection to ensure it's initialized
+            messages.size
+            lastMessage?.content
+        } catch (e: Exception) {
+            // Log the exception but don't throw - this is just for DTO preparation
+            println("Warning: Failed to initialize some lazy properties for DTO: ${e.message}")
+        }
+    }
+
     companion object : PanacheCompanion<Conversation> {
-        // Custom query methods can be added here
+        // Custom query methods with proper fetching for common use cases
         fun findByInitiator(initiatorId: Long): List<Conversation> {
             return list("initiator.id = ?1", initiatorId)
         }
@@ -95,6 +125,33 @@ class Conversation : AuditableEntity() {
             return list(
                 "(initiator.id = ?1 AND unreadCountInitiator > 0) OR (receiver.id = ?1 AND unreadCountReceiver > 0)",
                 userId
+            )
+        }
+
+        // Add a method that eagerly fetches conversations with necessary relations
+        fun findByIdWithAssociations(id: Long): Conversation? {
+            return find(
+                """
+                SELECT c FROM Conversation c 
+                LEFT JOIN FETCH c.initiator
+                LEFT JOIN FETCH c.receiver  
+                LEFT JOIN FETCH c.student
+                LEFT JOIN FETCH c.messages
+                WHERE c.id = ?1
+                """, id
+            ).firstResult()
+        }
+
+        fun findByParticipantWithAssociations(userId: Long): List<Conversation> {
+            return list(
+                """
+                SELECT DISTINCT c FROM Conversation c 
+                LEFT JOIN FETCH c.initiator
+                LEFT JOIN FETCH c.receiver
+                LEFT JOIN FETCH c.student
+                WHERE c.initiator.id = ?1 OR c.receiver.id = ?1
+                ORDER BY c.lastMessageAt DESC
+                """, userId
             )
         }
     }

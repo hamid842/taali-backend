@@ -6,6 +6,8 @@ import com.taali.domain.model.message.Message
 import com.taali.api.dto.message.*
 import com.taali.api.dto.message.request.CreateConversationRequest
 import com.taali.api.dto.message.request.SendMessageRequest
+import com.taali.application.service.notification.ExpoPushNotificationService
+import com.taali.domain.model.notification.DeviceToken
 import com.taali.domain.model.school.Student
 import com.taali.domain.model.user.User
 import com.taali.domain.repository.message.ConversationRepository
@@ -13,6 +15,7 @@ import com.taali.domain.repository.message.MessageRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 @ApplicationScoped
@@ -23,6 +26,11 @@ class ConversationService {
 
     @Inject
     lateinit var messageRepository: MessageRepository
+
+    @Inject
+    lateinit var expoPushNotificationService: ExpoPushNotificationService
+
+    private val logger = LoggerFactory.getLogger(ConversationService::class.java)
 
     @Transactional
     fun createConversation(request: CreateConversationRequest, initiator: User): Conversation {
@@ -81,8 +89,56 @@ class ConversationService {
         }
         message.persist()
 
+        sendPushNotificationForMessage(message, conversation)
+
         return message
     }
+
+    private fun sendPushNotificationForMessage(message: Message, conversation: Conversation) {
+        try {
+            val recipient = conversation.getOtherParticipant(message.sender.id)
+            if (recipient != null) {
+                val recipientTokens = DeviceToken.findByUser(recipient.id!!).map { it.expoPushToken }
+
+                expoPushNotificationService.sendMessageNotification(
+                    recipientTokens = recipientTokens,
+                    senderName = "${message.sender.firstName} ${message.sender.lastName}",
+                    messagePreview = message.content,
+                    conversationId = conversation.id!!,
+                    messageId = message.id!!
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to send push notification for message", e)
+            // Don't throw exception - message should still be saved even if push fails
+        }
+    }
+
+    @Transactional
+    fun registerDeviceToken(userId: Long, expoPushToken: String, deviceType: String?) {
+        val user = User.findById(userId) ?: throw IllegalArgumentException("User not found")
+
+        val existingToken = DeviceToken.findByExpoToken(expoPushToken)
+
+        if (existingToken != null) {
+            // Reactivate / update existing token
+            existingToken.user = user
+            existingToken.deviceType = deviceType
+            existingToken.isActive = true
+            existingToken.persist()
+        } else {
+            // Create new token
+            DeviceToken().apply {
+                this.user = user
+                this.expoPushToken = expoPushToken
+                this.deviceType = deviceType
+                this.isActive = true
+            }.persist()
+        }
+
+        logger.info("Registered device token for user $userId")
+    }
+
 
     fun getConversationsForUser(userId: Long): List<Conversation> {
         return conversationRepository.findConversationsForUser(userId)
@@ -181,7 +237,10 @@ class ConversationService {
 
     private fun toStudentDTO(student: Student): ConversationDTO.StudentDTO {
         return ConversationDTO.StudentDTO(
-            id = student.id, firstName = student.user?.firstName, lastName = student.user?.lastName, grade = student.gradeLevel
+            id = student.id,
+            firstName = student.user?.firstName,
+            lastName = student.user?.lastName,
+            grade = student.gradeLevel
         )
     }
 }

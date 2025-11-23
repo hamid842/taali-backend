@@ -1,7 +1,10 @@
 package com.taali.api.rest.school
 
+import com.taali.api.dto.school.request.AssignClassRequest
+import com.taali.api.dto.school.request.BulkAssignClassRequest
 import com.taali.api.dto.school.request.ParentAssociationRequest
 import com.taali.api.dto.school.request.StudentDetailsRequest
+import com.taali.api.dto.shared.ApiResponse
 import com.taali.application.service.school.StudentService
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -34,6 +37,23 @@ class StudentResource {
         } catch (e: Exception) {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity(mapOf("error" to "Failed to fetch students: ${e.message}")).build()
+        }
+    }
+
+    @GET
+    @Path("/{studentId}/teachers")
+    fun getTeachersByStudent(@RestPath studentId: Long): Response {
+        return try {
+            val teachers = studentService.getTeachersByStudent(studentId)
+            Response.ok(ApiResponse.success(teachers)).build()
+        } catch (e: NotFoundException) {
+            Response.status(Response.Status.NOT_FOUND)
+                .entity(ApiResponse.error<Any>(e.message ?: "Student not found"))
+                .build()
+        } catch (e: Exception) {
+            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(ApiResponse.error<Any>("Failed to fetch teachers: ${e.message}"))
+                .build()
         }
     }
 
@@ -94,16 +114,15 @@ class StudentResource {
     @Path("/{studentId}/assign-class")
     @Transactional
     fun assignStudentToClass(
-        @RestPath studentId: Long,
-        request: AssignClassRequest
+        @RestPath studentId: Long, request: AssignClassRequest
     ): Response {
         return try {
             val success = studentService.assignStudentToClass(studentId, request.classId)
             if (success) {
                 Response.ok(mapOf("message" to "Student assigned to class successfully")).build()
             } else {
-                Response.status(Response.Status.NOT_FOUND)
-                    .entity(mapOf("error" to "Student or class not found")).build()
+                Response.status(Response.Status.NOT_FOUND).entity(mapOf("error" to "Student or class not found"))
+                    .build()
             }
         } catch (e: Exception) {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -200,12 +219,4 @@ class StudentResource {
     }
 }
 
-// NEW DTOs for class assignment
-data class AssignClassRequest(
-    val classId: Long
-)
 
-data class BulkAssignClassRequest(
-    val studentIds: List<Long>,
-    val classId: Long
-)

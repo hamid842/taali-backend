@@ -3,11 +3,13 @@ package com.taali.application.service.parent
 import com.taali.api.dto.auth.request.RegisterRequestDto
 import com.taali.api.dto.parent.request.CreateParentRequest
 import com.taali.api.dto.parent.response.*
+import com.taali.api.dto.school.StudentDTO
 import com.taali.application.service.user.UserService
 import com.taali.domain.enum.UserRole
 import com.taali.domain.model.school.Parent
 import com.taali.domain.model.school.Student
 import com.taali.domain.model.user.User
+import io.quarkus.panache.common.Parameters
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -67,11 +69,13 @@ class ParentService {
     }
 
     @Transactional
-    fun associateParentsWithStudent(studentId: Long, parentIds: List<Long>): Student {
+    fun associateParentsWithStudent(studentId: Long, parentIds: List<Long>): StudentDTO {
         val student =
-            Student.findById(studentId) ?: throw IllegalArgumentException("Student not found with id: $studentId")
+            Student.findByUser(studentId) ?: throw IllegalArgumentException("Student not found with id: $studentId")
 
-        val parents = Parent.find("id in ?1", parentIds).list()
+        val parents = Parent.find(
+            "user.id in :ids", Parameters.with("ids", parentIds)
+        ).list()
 
         if (parents.size != parentIds.size) {
             throw IllegalArgumentException("Some parent IDs were not found")
@@ -83,8 +87,13 @@ class ParentService {
                 parent.students.add(student)
             }
         }
+        // Force initialization of lazy properties within transaction
+        student.user?.firstName // Access user properties to ensure they're loaded
+        student.user?.lastName
+        student.user?.email
+        // Add any other lazy properties that will be used in the DTO
 
-        return student
+        return StudentDTO.fromEntity(student)
     }
 
     fun findParentsByStudent(studentId: Long): List<ParentResponse> {

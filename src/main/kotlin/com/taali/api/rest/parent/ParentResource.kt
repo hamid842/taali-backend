@@ -16,7 +16,7 @@ import org.jboss.logging.Logger
 @Path("/parents")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RolesAllowed("PARENT") // This secures all endpoints for PARENT role only
+@RolesAllowed("PARENT","SCHOOL_MANAGER","SCHOOL_ADMIN","OWNER")
 class ParentResource {
 
     @Inject
