@@ -4,6 +4,7 @@ import com.taali.domain.enum.UserRole
 
 data class TeacherDto(
     val id: Long,
+    val userId: Long?,
     val firstName: String?,
     val lastName: String?,
     val subject: String? = null,

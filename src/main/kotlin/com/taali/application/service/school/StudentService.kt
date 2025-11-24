@@ -149,6 +149,7 @@ class StudentService {
         return teachers.map { teacher ->
             TeacherDto(
                 id = teacher.id!!,
+                userId = teacher.user?.id,
                 firstName = teacher.user?.firstName ?: "",
                 lastName = teacher.user?.lastName ?: "",
                 subject = teacher.subject ?: "General",
@@ -166,6 +167,7 @@ class StudentService {
         return teachers.map { teacher ->
             TeacherDto(
                 id = teacher.id!!,
+                userId = teacher.user?.id,
                 firstName = teacher.user?.firstName ?: "",
                 lastName = teacher.user?.lastName ?: "",
                 subject = teacher.subject ?: "General",
@@ -187,10 +189,10 @@ class StudentService {
     // Get classes for filter dropdown
     fun getClassesBySchool(schoolId: Long): List<ClassResponse> {
         return SchoolClass.find("school.id = ?1 ORDER BY name", schoolId).list().map { schoolClass ->
-                ClassResponse(
-                    id = schoolClass.id!!, name = schoolClass.name, gradeLevel = schoolClass.gradeLevel
-                )
-            }
+            ClassResponse(
+                id = schoolClass.id!!, name = schoolClass.name, gradeLevel = schoolClass.gradeLevel
+            )
+        }
     }
 
     fun getStudentById(id: Long): Student? = Student.findById(id)

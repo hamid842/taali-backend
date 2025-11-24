@@ -6,6 +6,7 @@ import com.taali.api.dto.school.request.ParentAssociationRequest
 import com.taali.api.dto.school.request.StudentDetailsRequest
 import com.taali.api.dto.shared.ApiResponse
 import com.taali.application.service.school.StudentService
+import jakarta.annotation.security.RolesAllowed
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
@@ -42,6 +43,7 @@ class StudentResource {
 
     @GET
     @Path("/{studentId}/teachers")
+    @RolesAllowed("PARENT","STUDENT","OWNER","SCHOOL_MANAGER","SCHOOL_ADMIN")
     fun getTeachersByStudent(@RestPath studentId: Long): Response {
         return try {
             val teachers = studentService.getTeachersByStudent(studentId)

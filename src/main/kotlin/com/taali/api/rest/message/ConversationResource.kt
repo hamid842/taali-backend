@@ -8,6 +8,7 @@ import com.taali.api.dto.message.request.CreateConversationRequest
 import com.taali.api.dto.message.request.SendMessageRequest
 import com.taali.api.dto.shared.ApiResponse
 import com.taali.domain.model.user.User
+import jakarta.annotation.security.RolesAllowed
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
@@ -28,6 +29,7 @@ class ConversationResource {
 
     @POST
     @Transactional
+    @RolesAllowed("PARENT","OWNER","SCHOOL_MANAGER","TEACHER")
     fun createConversation(
         request: CreateConversationRequest, @HeaderParam("X-User-Id") userId: Long
     ): Response {
